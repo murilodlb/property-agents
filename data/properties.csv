@@ -1,0 +1,361 @@
+prop_id,builder,title,prop_type,year_delivery,dist_beach_km,price_brl,documentation,water_source,yield_rate_pct,monthly_fee_brl,area_m2,sun_position,city
+p001,Moura Dubeux,Solar Potengi,apartamento,2026,11.0,405500,escriturado,caern,5.9,620,75,norte,Natal
+p002,Moura Dubeux,Solar Potengi,apartamento,2018,10.5,429500,escriturado,caern,5.7,870,99,nascente,Natal
+p003,Moura Dubeux,Solar Potengi,apartamento,2022,2.1,420000,escriturado,caern,6.8,890,92,nascente,Natal
+p004,Moura Dubeux,Solar Potengi,apartamento,2017,15.3,287500,escriturado,caern,4.7,530,72,nascente,Natal
+p005,Moura Dubeux,Solar Potengi,apartamento,2015,6.3,434500,escriturado,caern,8.9,930,105,sul,Natal
+p006,Moura Dubeux,Solar Potengi,apartamento,2018,4.9,600500,escriturado,caern,6.2,1060,145,nascente,Natal
+p007,Moura Dubeux,Solar Potengi,apartamento,2017,15.0,496000,escriturado,caern,7.5,890,118,nascente,Natal
+p008,Moura Dubeux,Solar Potengi,apartamento,2022,9.1,449000,escriturado,poco_artesiano,9.6,850,92,poente,Natal
+p009,Moura Dubeux,Solar Potengi,apartamento,2020,9.2,357000,escriturado,caern,6.0,640,76,sul,Natal
+p010,Moura Dubeux,Solar Potengi,apartamento,2017,4.5,572500,escriturado,caern,9.7,1070,130,poente,Natal
+p011,Moura Dubeux,Solar Potengi,apartamento,2023,2.8,421000,escriturado,ambos,9.4,780,89,sul,Natal
+p012,Moura Dubeux,Solar Potengi,apartamento,2023,11.0,589000,escriturado,caern,9.8,1210,131,sul,Natal
+p013,Moura Dubeux,Solar Potengi,apartamento,2016,11.7,486000,escriturado,caern,9.4,1060,115,nascente,Natal
+p014,Moura Dubeux,Solar Potengi,apartamento,2025,2.8,461500,escriturado,caern,8.8,790,85,poente,Natal
+p015,Moura Dubeux,Solar Potengi,apartamento,2024,14.1,364500,escriturado,caern,6.7,520,72,sul,Natal
+p016,Cyrela,Mirante de Ponta Negra,apartamento,2016,8.7,351000,escriturado,ambos,7.9,980,105,sul,Natal
+p017,Cyrela,Mirante de Ponta Negra,apartamento,2024,11.8,643500,escriturado,caern,6.8,1530,162,poente,Natal
+p018,Cyrela,Mirante de Ponta Negra,apartamento,2023,0.7,660500,escriturado,caern,9.0,1020,151,nascente,Natal
+p019,Cyrela,Mirante de Ponta Negra,apartamento,2018,8.4,367500,escriturado,caern,7.3,840,102,nascente,Natal
+p020,Cyrela,Mirante de Ponta Negra,apartamento,2024,3.4,686000,escriturado,ambos,8.1,1320,168,norte,Natal
+p021,Cyrela,Mirante de Ponta Negra,apartamento,2025,11.8,450500,escriturado,caern,5.8,730,101,nascente,Natal
+p022,Cyrela,Mirante de Ponta Negra,apartamento,2021,1.6,486500,escriturado,caern,10.2,780,112,sul,Natal
+p023,Cyrela,Mirante de Ponta Negra,apartamento,2015,3.0,515000,posse,ambos,5.9,1280,164,norte,Natal
+p024,Cyrela,Mirante de Ponta Negra,apartamento,2015,7.5,434500,posse,caern,9.5,1350,143,norte,Natal
+p025,Cyrela,Mirante de Ponta Negra,apartamento,2017,11.9,522500,escriturado,caern,5.9,1080,157,nascente,Natal
+p026,Cyrela,Mirante de Ponta Negra,apartamento,2017,1.5,570500,escriturado,caern,9.7,1270,162,sul,Natal
+p027,Cyrela,Mirante de Ponta Negra,apartamento,2018,10.7,622500,escriturado,caern,6.2,1240,167,nascente,Natal
+p028,Cyrela,Mirante de Ponta Negra,apartamento,2018,7.5,541500,escriturado,caern,9.8,910,135,poente,Natal
+p029,Moura Dubeux,Residencial Via Costeira,apartamento,2016,15.0,636500,escriturado,caern,8.9,1330,177,nascente,Natal
+p030,Moura Dubeux,Residencial Via Costeira,apartamento,2026,8.7,750000,escriturado,poco_artesiano,8.6,1570,174,norte,Natal
+p031,Moura Dubeux,Residencial Via Costeira,apartamento,2019,4.6,477000,escriturado,caern,8.9,870,122,poente,Natal
+p032,Moura Dubeux,Residencial Via Costeira,apartamento,2023,1.8,579500,escriturado,ambos,7.3,910,138,norte,Natal
+p033,Moura Dubeux,Residencial Via Costeira,apartamento,2017,0.6,482000,escriturado,caern,9.9,1230,138,poente,Natal
+p034,Moura Dubeux,Residencial Via Costeira,apartamento,2024,6.1,689500,escriturado,caern,10.8,1010,152,nascente,Natal
+p035,Moura Dubeux,Residencial Via Costeira,apartamento,2025,6.7,598000,escriturado,ambos,6.5,1230,136,sul,Natal
+p036,Moura Dubeux,Residencial Via Costeira,apartamento,2021,14.9,506000,escriturado,ambos,9.4,1110,127,nascente,Natal
+p037,Moura Dubeux,Residencial Via Costeira,apartamento,2021,13.1,450000,escriturado,ambos,6.4,1020,118,nascente,Natal
+p038,Moura Dubeux,Residencial Via Costeira,apartamento,2025,15.5,428500,escriturado,caern,8.7,820,108,sul,Natal
+p039,Moura Dubeux,Residencial Via Costeira,apartamento,2020,3.2,647500,posse,caern,6.7,1180,173,sul,Natal
+p040,Moura Dubeux,Residencial Via Costeira,apartamento,2021,9.4,545500,escriturado,caern,8.8,950,145,nascente,Natal
+p041,Ecomax,Recanto de Pium,casa,2025,6.1,577500,escriturado,ambos,9.5,610,247,norte,Nísia Floresta
+p042,Ecomax,Recanto de Pium,casa,2023,2.4,324500,posse,ambos,8.2,430,141,norte,Parnamirim
+p043,Ecomax,Recanto de Pium,casa,2024,5.1,363500,escriturado,ambos,10.1,420,154,norte,Nísia Floresta
+p044,Ecomax,Recanto de Pium,casa,2022,15.4,535500,escriturado,ambos,8.6,540,223,norte,Parnamirim
+p045,Ecomax,Recanto de Pium,casa,2016,3.9,341000,posse,poco_artesiano,5.1,470,195,norte,Nísia Floresta
+p046,Ecomax,Recanto de Pium,casa,2022,11.3,303000,escriturado,ambos,6.4,350,128,nascente,Parnamirim
+p047,Ecomax,Recanto de Pium,casa,2021,7.6,327000,escriturado,poco_artesiano,10.2,310,137,norte,Parnamirim
+p048,Ecomax,Recanto de Pium,casa,2025,12.2,566000,escriturado,ambos,9.8,680,228,nascente,Parnamirim
+p049,Ecomax,Recanto de Pium,casa,2022,4.4,518500,posse,ambos,9.1,720,250,poente,Parnamirim
+p050,Ecomax,Recanto de Pium,casa,2019,5.6,415500,escriturado,ambos,5.6,400,171,nascente,Parnamirim
+p051,Ecomax,Recanto de Pium,casa,2026,7.7,362500,escriturado,ambos,10.4,380,149,nascente,Parnamirim
+p052,Ecomax,Recanto de Pium,casa,2024,12.2,289500,escriturado,caern,10.4,290,115,nascente,Nísia Floresta
+p053,Ecomax,Recanto de Pium,casa,2024,8.0,524500,posse,ambos,9.2,720,249,nascente,Nísia Floresta
+p054,Ecomax,Recanto de Pium,casa,2017,9.6,429000,posse,ambos,5.1,590,229,sul,Nísia Floresta
+p055,MRV,Reserva Nísia,casa,2015,22.7,220000,escriturado,caern,5.7,320,118,poente,São José de Mipibu
+p056,MRV,Reserva Nísia,casa,2022,5.9,265500,escriturado,ambos,9.7,260,105,sul,Nísia Floresta
+p057,MRV,Reserva Nísia,casa,2018,7.8,240000,posse,ambos,10.0,290,126,nascente,Parnamirim
+p058,MRV,Reserva Nísia,casa,2017,12.5,286500,escriturado,poco_artesiano,6.1,340,142,norte,Nísia Floresta
+p059,MRV,Reserva Nísia,casa,2018,19.4,289000,posse,caern,8.7,440,168,sul,São José de Mipibu
+p060,MRV,Reserva Nísia,casa,2024,23.2,210000,posse,caern,7.1,290,110,poente,Macaíba
+p061,MRV,Reserva Nísia,casa,2023,9.4,348000,posse,poco_artesiano,7.1,310,135,poente,Macaíba
+p062,MRV,Reserva Nísia,casa,2021,11.4,227500,posse,ambos,8.9,290,108,norte,Parnamirim
+p063,MRV,Reserva Nísia,casa,2022,5.4,387000,escriturado,poco_artesiano,10.6,350,163,poente,Nísia Floresta
+p064,MRV,Reserva Nísia,casa,2022,24.9,382500,escriturado,ambos,7.7,420,191,nascente,Macaíba
+p065,MRV,Reserva Nísia,casa,2024,15.2,297000,escriturado,caern,9.2,300,130,nascente,Nísia Floresta
+p066,MRV,Reserva Nísia,casa,2022,1.9,454500,escriturado,ambos,9.6,400,183,norte,Parnamirim
+p067,MRV,Reserva Nísia,casa,2023,22.6,341000,escriturado,ambos,6.6,330,155,norte,Macaíba
+p068,MRV,Reserva Nísia,casa,2020,3.3,272500,escriturado,ambos,8.1,300,119,norte,Nísia Floresta
+p069,MRV,Reserva Nísia,casa,2024,21.2,333500,escriturado,caern,5.4,380,162,nascente,São José de Mipibu
+p070,Ecomax,Bosque das Dunas,casa,2023,12.1,289500,escriturado,poco_artesiano,5.2,300,133,poente,Natal
+p071,Ecomax,Bosque das Dunas,casa,2017,2.2,343500,posse,caern,7.9,510,207,sul,Parnamirim
+p072,Ecomax,Bosque das Dunas,casa,2017,4.3,281000,posse,poco_artesiano,7.3,400,158,nascente,Parnamirim
+p073,Ecomax,Bosque das Dunas,casa,2021,15.8,505000,escriturado,ambos,8.3,640,253,sul,Parnamirim
+p074,Ecomax,Bosque das Dunas,casa,2025,3.1,386500,escriturado,ambos,6.1,410,173,nascente,Parnamirim
+p075,Ecomax,Bosque das Dunas,casa,2015,7.4,375000,escriturado,ambos,9.6,520,194,norte,Parnamirim
+p076,Ecomax,Bosque das Dunas,casa,2021,4.5,351000,escriturado,caern,5.8,450,170,nascente,Parnamirim
+p077,Ecomax,Bosque das Dunas,casa,2019,6.7,529000,escriturado,ambos,8.0,630,265,nascente,Parnamirim
+p078,Ecomax,Bosque das Dunas,casa,2026,15.4,554000,escriturado,caern,8.6,640,230,nascente,Parnamirim
+p079,Ecomax,Bosque das Dunas,casa,2024,10.6,430000,escriturado,poco_artesiano,6.4,470,188,poente,Extremoz
+p080,Ecomax,Bosque das Dunas,casa,2016,2.0,459000,escriturado,ambos,7.3,590,245,nascente,Parnamirim
+p081,Ecomax,Bosque das Dunas,casa,2024,8.2,315000,escriturado,caern,8.9,390,180,nascente,Natal
+p082,Ecomax,Bosque das Dunas,casa,2024,6.5,340000,escriturado,ambos,7.4,480,180,poente,Parnamirim
+p083,Ecomax,Bosque das Dunas,casa,2023,2.2,535500,escriturado,caern,10.6,600,222,nascente,Parnamirim
+p084,Ecomax,Bosque das Dunas,casa,2022,12.2,599000,escriturado,caern,9.1,560,258,nascente,Natal
+p085,Particular,Jardim das Mangueiras,casa,2022,10.2,373500,posse,ambos,9.0,350,178,nascente,Parnamirim
+p086,Particular,Jardim das Mangueiras,casa,2016,15.2,438500,escriturado,poco_artesiano,5.2,510,209,nascente,Natal
+p087,Particular,Jardim das Mangueiras,casa,2019,7.5,616500,escriturado,ambos,6.1,620,285,poente,Natal
+p088,Particular,Jardim das Mangueiras,casa,2016,31.1,221000,escriturado,poco_artesiano,8.8,270,139,poente,Macaíba
+p089,Particular,Jardim das Mangueiras,casa,2024,8.8,554500,posse,ambos,8.5,550,255,nascente,Natal
+p090,Particular,Jardim das Mangueiras,casa,2018,13.8,331500,posse,caern,6.3,390,187,nascente,Parnamirim
+p091,Particular,Jardim das Mangueiras,casa,2021,32.9,343000,posse,poco_artesiano,5.6,500,202,norte,Mossoró
+p092,Particular,Jardim das Mangueiras,casa,2022,2.6,326500,escriturado,poco_artesiano,11.0,240,130,nascente,Parnamirim
+p093,Particular,Jardim das Mangueiras,casa,2020,22.6,323500,escriturado,caern,7.7,420,172,nascente,Macaíba
+p094,Particular,Jardim das Mangueiras,casa,2022,26.8,523500,posse,caern,10.4,690,299,nascente,Macaíba
+p095,Particular,Jardim das Mangueiras,casa,2020,12.8,258500,escriturado,caern,6.4,260,130,nascente,Parnamirim
+p096,Particular,Jardim das Mangueiras,casa,2021,1.7,628000,escriturado,poco_artesiano,9.1,460,240,nascente,Natal
+p097,Particular,Jardim das Mangueiras,casa,2018,32.1,250000,escriturado,caern,9.4,320,141,nascente,Mossoró
+p098,Particular,Jardim das Mangueiras,casa,2020,11.2,438000,posse,caern,6.5,540,218,sul,Natal
+p099,Particular,Jardim das Mangueiras,casa,2018,36.2,203000,escriturado,caern,9.0,270,132,nascente,Mossoró
+p100,Alliance,Vila Atlântica,casa,2024,12.5,300500,escriturado,poco_artesiano,9.6,340,132,sul,Nísia Floresta
+p101,Alliance,Vila Atlântica,casa,2025,2.5,387500,posse,poco_artesiano,9.5,440,184,norte,Nísia Floresta
+p102,Alliance,Vila Atlântica,casa,2018,2.5,304000,escriturado,caern,8.2,420,128,sul,Natal
+p103,Alliance,Vila Atlântica,casa,2017,13.0,412000,escriturado,poco_artesiano,6.3,470,189,poente,Parnamirim
+p104,Alliance,Vila Atlântica,casa,2018,15.5,289500,posse,ambos,6.5,480,156,sul,Extremoz
+p105,Alliance,Vila Atlântica,casa,2016,9.5,547500,escriturado,ambos,9.6,630,257,norte,Nísia Floresta
+p106,Alliance,Vila Atlântica,casa,2022,14.6,232500,posse,ambos,6.7,350,126,sul,Nísia Floresta
+p107,Alliance,Vila Atlântica,casa,2019,8.8,243000,posse,caern,6.9,420,129,nascente,Nísia Floresta
+p108,Alliance,Vila Atlântica,casa,2021,10.6,670000,escriturado,ambos,8.4,840,258,sul,Natal
+p109,Alliance,Vila Atlântica,casa,2024,11.0,345000,escriturado,ambos,9.6,520,155,nascente,Nísia Floresta
+p110,Alliance,Vila Atlântica,casa,2018,1.9,487000,escriturado,poco_artesiano,8.3,700,214,sul,Nísia Floresta
+p111,Alliance,Vila Atlântica,casa,2019,7.4,513500,escriturado,caern,8.5,650,221,norte,Parnamirim
+p112,Alliance,Vila Atlântica,casa,2018,13.3,378500,posse,poco_artesiano,7.7,640,205,nascente,Nísia Floresta
+p113,Alliance,Vila Atlântica,casa,2024,2.4,378500,escriturado,poco_artesiano,7.0,470,157,nascente,Nísia Floresta
+p114,Alliance,Vila Atlântica,casa,2020,3.1,231000,posse,caern,9.5,350,123,nascente,Nísia Floresta
+p115,Capuche,Condomínio Morada do Sol,casa,2022,8.3,576500,posse,ambos,5.6,690,251,nascente,Natal
+p116,Capuche,Condomínio Morada do Sol,casa,2019,24.7,457500,escriturado,poco_artesiano,8.4,660,263,nascente,Macaíba
+p117,Capuche,Condomínio Morada do Sol,casa,2016,26.7,244500,escriturado,caern,8.2,360,148,nascente,Macaíba
+p118,Capuche,Condomínio Morada do Sol,casa,2022,32.7,386000,escriturado,ambos,9.8,530,205,norte,Mossoró
+p119,Capuche,Condomínio Morada do Sol,casa,2022,23.6,416000,posse,ambos,6.7,570,240,norte,Macaíba
+p120,Capuche,Condomínio Morada do Sol,casa,2020,36.9,242000,posse,caern,7.8,440,169,norte,Mossoró
+p121,Capuche,Condomínio Morada do Sol,casa,2025,36.5,438000,escriturado,caern,9.3,630,214,norte,Mossoró
+p122,Capuche,Condomínio Morada do Sol,casa,2016,3.8,449500,escriturado,caern,9.5,530,220,norte,Natal
+p123,Capuche,Condomínio Morada do Sol,casa,2018,29.5,415500,posse,poco_artesiano,8.0,590,276,sul,Macaíba
+p124,Capuche,Condomínio Morada do Sol,casa,2019,30.9,510500,escriturado,caern,5.7,680,307,norte,Macaíba
+p125,Capuche,Condomínio Morada do Sol,casa,2017,8.7,313500,escriturado,poco_artesiano,7.2,330,147,nascente,Natal
+p126,Capuche,Condomínio Morada do Sol,casa,2024,36.5,374500,escriturado,poco_artesiano,5.7,530,213,nascente,Mossoró
+p127,Capuche,Condomínio Morada do Sol,casa,2022,34.1,487000,escriturado,caern,8.7,740,285,poente,Mossoró
+p128,Capuche,Condomínio Morada do Sol,casa,2015,33.2,348000,escriturado,poco_artesiano,8.3,570,208,nascente,Mossoró
+p129,Capuche,Condomínio Morada do Sol,casa,2015,35.2,237000,escriturado,ambos,7.2,430,160,nascente,Mossoró
+p130,Direcional,Vilas de Extremoz,casa,2026,13.8,353000,escriturado,caern,8.6,340,145,sul,Extremoz
+p131,Direcional,Vilas de Extremoz,casa,2021,10.0,254500,escriturado,caern,10.0,210,109,norte,Extremoz
+p132,Direcional,Vilas de Extremoz,casa,2021,5.2,279500,escriturado,ambos,7.3,250,126,nascente,Extremoz
+p133,Direcional,Vilas de Extremoz,casa,2023,11.7,262500,escriturado,poco_artesiano,9.6,220,109,nascente,Extremoz
+p134,Direcional,Vilas de Extremoz,casa,2017,3.2,263000,escriturado,poco_artesiano,7.8,290,120,norte,Extremoz
+p135,Direcional,Vilas de Extremoz,casa,2020,2.8,319000,posse,ambos,5.9,330,152,poente,Extremoz
+p136,Direcional,Vilas de Extremoz,casa,2019,1.6,268000,escriturado,ambos,10.2,320,130,nascente,Extremoz
+p137,Direcional,Vilas de Extremoz,casa,2021,14.4,341500,escriturado,ambos,9.3,370,159,norte,Extremoz
+p138,Direcional,Vilas de Extremoz,casa,2023,14.4,341000,escriturado,caern,9.0,340,155,nascente,Extremoz
+p139,Direcional,Vilas de Extremoz,casa,2019,6.4,267000,escriturado,ambos,9.3,300,126,poente,Extremoz
+p140,Direcional,Vilas de Extremoz,casa,2025,6.4,412500,escriturado,caern,10.4,450,175,poente,Extremoz
+p141,Direcional,Vilas de Extremoz,casa,2020,5.2,260000,escriturado,ambos,8.9,220,114,sul,Extremoz
+p142,Direcional,Vilas de Extremoz,casa,2019,2.4,239500,escriturado,ambos,10.6,270,105,nascente,Extremoz
+p143,Direcional,Vilas de Extremoz,casa,2020,15.2,239500,escriturado,ambos,7.4,210,106,nascente,Extremoz
+p144,Direcional,Vilas de Extremoz,casa,2019,13.4,202500,posse,caern,4.9,220,104,norte,Extremoz
+p145,Cyrela,Alphaville Potiguar,casa,2024,36.6,435000,escriturado,caern,6.2,600,233,norte,Mossoró
+p146,Cyrela,Alphaville Potiguar,casa,2026,12.1,849000,escriturado,ambos,8.4,920,373,nascente,Parnamirim
+p147,Cyrela,Alphaville Potiguar,casa,2018,34.8,483000,escriturado,poco_artesiano,6.6,850,320,sul,Mossoró
+p148,Cyrela,Alphaville Potiguar,casa,2018,35.8,596500,posse,caern,7.6,930,409,nascente,Mossoró
+p149,Cyrela,Alphaville Potiguar,casa,2016,37.4,587000,escriturado,poco_artesiano,6.7,1260,417,nascente,Mossoró
+p150,Cyrela,Alphaville Potiguar,casa,2020,6.2,603500,posse,ambos,5.7,750,315,nascente,Natal
+p151,Cyrela,Alphaville Potiguar,casa,2026,4.9,599000,escriturado,poco_artesiano,9.8,520,225,nascente,Natal
+p152,Cyrela,Alphaville Potiguar,casa,2024,13.4,693000,escriturado,caern,9.2,830,314,nascente,Parnamirim
+p153,Cyrela,Alphaville Potiguar,casa,2018,12.8,555000,escriturado,caern,5.2,810,273,poente,Natal
+p154,Cyrela,Alphaville Potiguar,casa,2025,7.1,480000,escriturado,caern,7.1,520,204,nascente,Parnamirim
+p155,Cyrela,Alphaville Potiguar,casa,2023,8.3,462500,posse,caern,8.4,560,221,poente,Parnamirim
+p156,Cyrela,Alphaville Potiguar,casa,2021,12.7,641500,posse,caern,8.9,990,362,nascente,Parnamirim
+p157,Cyrela,Alphaville Potiguar,casa,2020,35.9,668000,escriturado,caern,8.5,1180,388,nascente,Mossoró
+p158,Cyrela,Alphaville Potiguar,casa,2017,5.0,448500,escriturado,poco_artesiano,6.1,550,246,poente,Parnamirim
+p159,Cyrela,Alphaville Potiguar,casa,2021,36.5,463000,posse,ambos,6.8,950,331,nascente,Mossoró
+p160,MRV,Portal de Parnamirim,casa,2019,12.0,329000,escriturado,caern,6.8,350,137,sul,Parnamirim
+p161,MRV,Portal de Parnamirim,casa,2020,11.7,300000,posse,ambos,8.1,390,158,norte,Parnamirim
+p162,MRV,Portal de Parnamirim,casa,2016,9.8,286500,escriturado,ambos,8.2,290,136,nascente,Parnamirim
+p163,MRV,Portal de Parnamirim,casa,2024,15.1,283500,posse,caern,8.7,300,140,sul,Parnamirim
+p164,MRV,Portal de Parnamirim,casa,2017,12.6,317000,posse,caern,4.8,440,181,poente,Parnamirim
+p165,MRV,Portal de Parnamirim,casa,2024,6.2,370000,escriturado,caern,6.2,280,144,poente,Parnamirim
+p166,MRV,Portal de Parnamirim,casa,2025,3.3,363500,escriturado,poco_artesiano,11.0,260,135,nascente,Parnamirim
+p167,MRV,Portal de Parnamirim,casa,2022,16.0,415500,escriturado,ambos,5.8,350,185,norte,Parnamirim
+p168,MRV,Portal de Parnamirim,casa,2022,15.8,397000,posse,poco_artesiano,8.9,420,186,sul,Parnamirim
+p169,MRV,Portal de Parnamirim,casa,2017,12.8,286000,escriturado,poco_artesiano,5.1,270,133,poente,Parnamirim
+p170,MRV,Portal de Parnamirim,casa,2015,15.7,299500,escriturado,ambos,9.0,300,158,poente,Parnamirim
+p171,MRV,Portal de Parnamirim,casa,2026,9.4,463500,escriturado,ambos,7.4,350,186,poente,Parnamirim
+p172,MRV,Portal de Parnamirim,casa,2020,9.6,393000,escriturado,poco_artesiano,5.7,360,161,poente,Parnamirim
+p173,MRV,Portal de Parnamirim,casa,2023,11.5,265000,escriturado,caern,10.3,280,110,nascente,Parnamirim
+p174,MRV,Portal de Parnamirim,casa,2018,5.1,292500,escriturado,ambos,7.8,250,127,nascente,Parnamirim
+p175,Particular,Residencial Lagoa Azul,casa,2017,29.8,243000,escriturado,ambos,8.9,260,154,poente,Macaíba
+p176,Particular,Residencial Lagoa Azul,casa,2024,10.0,566500,escriturado,caern,10.2,570,279,poente,Nísia Floresta
+p177,Particular,Residencial Lagoa Azul,casa,2022,7.5,413500,escriturado,poco_artesiano,6.3,380,192,poente,Extremoz
+p178,Particular,Residencial Lagoa Azul,casa,2024,31.8,350000,escriturado,poco_artesiano,7.4,440,202,nascente,São José de Mipibu
+p179,Particular,Residencial Lagoa Azul,casa,2020,20.0,231000,escriturado,caern,9.9,320,142,poente,São José de Mipibu
+p180,Particular,Residencial Lagoa Azul,casa,2017,20.7,455500,posse,poco_artesiano,9.8,670,336,norte,São José de Mipibu
+p181,Particular,Residencial Lagoa Azul,casa,2015,33.4,365000,escriturado,caern,4.5,450,242,poente,Mossoró
+p182,Particular,Residencial Lagoa Azul,casa,2025,2.1,711000,escriturado,caern,7.6,640,330,nascente,Extremoz
+p183,Particular,Residencial Lagoa Azul,casa,2021,22.0,219000,escriturado,ambos,7.4,260,126,nascente,São José de Mipibu
+p184,Particular,Residencial Lagoa Azul,casa,2025,34.2,545500,escriturado,caern,8.4,530,274,nascente,Mossoró
+p185,Particular,Residencial Lagoa Azul,casa,2023,11.4,602500,escriturado,caern,8.0,480,269,nascente,Nísia Floresta
+p186,Particular,Residencial Lagoa Azul,casa,2020,35.7,231000,posse,caern,8.0,300,150,nascente,Mossoró
+p187,Particular,Residencial Lagoa Azul,casa,2026,22.6,439500,escriturado,ambos,7.8,450,240,nascente,São José de Mipibu
+p188,Particular,Residencial Lagoa Azul,casa,2026,35.9,683000,escriturado,ambos,8.6,620,338,nascente,Mossoró
+p189,Particular,Residencial Lagoa Azul,casa,2017,6.3,479000,escriturado,ambos,6.2,490,237,norte,Nísia Floresta
+p190,Particular,Residencial Lagoa Azul,casa,2015,3.6,297000,escriturado,ambos,8.2,330,163,poente,Extremoz
+p191,Capuche,Quintas de Mipibu,terreno,2020,15.3,110500,escriturado,poco_artesiano,7.8,100,343,nascente,Nísia Floresta
+p192,Capuche,Quintas de Mipibu,terreno,2026,21.9,291000,escriturado,caern,11.1,310,938,sul,São José de Mipibu
+p193,Capuche,Quintas de Mipibu,terreno,2019,22.0,125500,posse,poco_artesiano,8.3,140,492,nascente,São José de Mipibu
+p194,Capuche,Quintas de Mipibu,terreno,2020,4.9,211000,posse,ambos,7.7,190,684,nascente,Nísia Floresta
+p195,Capuche,Quintas de Mipibu,terreno,2018,27.7,189500,escriturado,caern,8.4,220,770,sul,São José de Mipibu
+p196,Capuche,Quintas de Mipibu,terreno,2018,28.0,177000,posse,poco_artesiano,9.2,190,823,poente,São José de Mipibu
+p197,Capuche,Quintas de Mipibu,terreno,2021,27.1,113500,posse,ambos,7.0,120,441,poente,São José de Mipibu
+p198,Capuche,Quintas de Mipibu,terreno,2017,23.9,103500,escriturado,caern,9.5,120,371,norte,São José de Mipibu
+p199,Capuche,Quintas de Mipibu,terreno,2026,21.5,145000,escriturado,poco_artesiano,10.8,110,450,nascente,São José de Mipibu
+p200,Capuche,Quintas de Mipibu,terreno,2022,22.1,187500,escriturado,ambos,7.2,200,686,sul,São José de Mipibu
+p201,Capuche,Quintas de Mipibu,terreno,2019,14.3,185000,escriturado,caern,7.9,160,623,poente,Nísia Floresta
+p202,Capuche,Quintas de Mipibu,terreno,2017,0.5,171500,posse,caern,7.5,190,618,norte,Nísia Floresta
+p203,Direcional,Loteamento Brisa do Sul,terreno,2021,3.3,189000,escriturado,poco_artesiano,7.9,160,655,norte,Extremoz
+p204,Direcional,Loteamento Brisa do Sul,terreno,2025,14.0,138000,posse,caern,8.2,90,600,sul,Extremoz
+p205,Direcional,Loteamento Brisa do Sul,terreno,2022,11.7,117000,posse,ambos,9.1,140,481,nascente,Extremoz
+p206,Direcional,Loteamento Brisa do Sul,terreno,2022,14.4,110000,escriturado,caern,7.2,90,361,poente,Extremoz
+p207,Direcional,Loteamento Brisa do Sul,terreno,2020,2.7,152500,posse,poco_artesiano,9.3,140,542,nascente,Nísia Floresta
+p208,Direcional,Loteamento Brisa do Sul,terreno,2023,10.9,208500,posse,ambos,10.0,200,722,norte,Parnamirim
+p209,Direcional,Loteamento Brisa do Sul,terreno,2016,14.5,138500,posse,poco_artesiano,7.7,150,610,norte,Parnamirim
+p210,Direcional,Loteamento Brisa do Sul,terreno,2016,14.4,158500,posse,ambos,5.1,170,692,poente,Nísia Floresta
+p211,Direcional,Loteamento Brisa do Sul,terreno,2015,0.7,212500,escriturado,caern,5.6,200,817,nascente,Extremoz
+p212,Direcional,Loteamento Brisa do Sul,terreno,2020,14.3,180500,posse,caern,7.8,170,673,nascente,Extremoz
+p213,Direcional,Loteamento Brisa do Sul,terreno,2021,6.3,98500,posse,caern,9.6,110,378,poente,Extremoz
+p214,Direcional,Loteamento Brisa do Sul,terreno,2016,11.8,156500,escriturado,caern,4.9,140,596,poente,Parnamirim
+p215,Direcional,Loteamento Brisa do Sul,terreno,2021,5.8,232500,escriturado,ambos,11.0,230,797,nascente,Extremoz
+p216,Direcional,Loteamento Brisa do Sul,terreno,2024,3.6,179500,posse,ambos,6.6,190,669,nascente,Extremoz
+p217,Direcional,Loteamento Brisa do Sul,terreno,2018,3.8,81000,posse,caern,6.0,80,289,nascente,Parnamirim
+p218,Ecomax,Loteamento Mar do Norte,terreno,2024,5.0,179000,posse,caern,9.9,150,556,nascente,Extremoz
+p219,Ecomax,Loteamento Mar do Norte,terreno,2023,10.2,94000,posse,ambos,8.5,100,292,sul,Extremoz
+p220,Ecomax,Loteamento Mar do Norte,terreno,2023,6.3,248500,escriturado,caern,8.7,210,620,nascente,Nísia Floresta
+p221,Ecomax,Loteamento Mar do Norte,terreno,2022,9.0,114000,posse,caern,7.1,100,377,sul,Extremoz
+p222,Ecomax,Loteamento Mar do Norte,terreno,2020,4.6,282500,escriturado,ambos,9.1,240,690,nascente,Natal
+p223,Ecomax,Loteamento Mar do Norte,terreno,2022,14.5,152500,escriturado,ambos,6.6,150,452,nascente,Extremoz
+p224,Ecomax,Loteamento Mar do Norte,terreno,2018,4.1,235000,posse,ambos,7.2,220,720,nascente,Natal
+p225,Ecomax,Loteamento Mar do Norte,terreno,2019,12.9,210500,escriturado,ambos,9.3,160,545,poente,Natal
+p226,Ecomax,Loteamento Mar do Norte,terreno,2021,0.7,206500,escriturado,ambos,9.5,180,550,norte,Extremoz
+p227,Ecomax,Loteamento Mar do Norte,terreno,2020,9.0,160500,escriturado,caern,7.4,140,430,nascente,Extremoz
+p228,Ecomax,Loteamento Mar do Norte,terreno,2022,11.6,293000,escriturado,ambos,10.5,220,732,nascente,Natal
+p229,Ecomax,Loteamento Mar do Norte,terreno,2023,10.8,124500,escriturado,ambos,8.0,100,290,sul,Natal
+p230,Ecomax,Loteamento Mar do Norte,terreno,2015,10.3,126500,escriturado,caern,9.8,120,384,nascente,Extremoz
+p231,Ecomax,Loteamento Mar do Norte,terreno,2023,8.8,278500,escriturado,poco_artesiano,8.6,250,774,norte,Extremoz
+p232,Ecomax,Loteamento Mar do Norte,terreno,2016,10.1,123000,posse,caern,6.9,140,413,nascente,Natal
+p233,Capuche,Terras de São José,terreno,2022,27.6,191500,escriturado,ambos,9.1,210,675,nascente,São José de Mipibu
+p234,Capuche,Terras de São José,terreno,2021,18.1,94500,escriturado,caern,8.1,90,355,nascente,Macaíba
+p235,Capuche,Terras de São José,terreno,2016,30.6,177500,posse,ambos,7.9,210,839,nascente,Macaíba
+p236,Capuche,Terras de São José,terreno,2023,5.3,199000,escriturado,poco_artesiano,9.4,160,547,sul,Nísia Floresta
+p237,Capuche,Terras de São José,terreno,2016,29.9,160500,escriturado,caern,7.7,170,667,poente,Macaíba
+p238,Capuche,Terras de São José,terreno,2023,21.3,80500,posse,poco_artesiano,8.9,100,340,nascente,Macaíba
+p239,Capuche,Terras de São José,terreno,2015,21.2,125500,posse,ambos,6.7,140,594,poente,São José de Mipibu
+p240,Capuche,Terras de São José,terreno,2016,19.0,136000,posse,poco_artesiano,6.9,190,649,nascente,São José de Mipibu
+p241,Capuche,Terras de São José,terreno,2020,24.2,180000,escriturado,poco_artesiano,5.9,150,658,sul,São José de Mipibu
+p242,Capuche,Terras de São José,terreno,2023,25.8,234000,escriturado,poco_artesiano,9.9,250,830,nascente,São José de Mipibu
+p243,Capuche,Terras de São José,terreno,2021,31.9,147500,posse,ambos,8.2,200,683,poente,São José de Mipibu
+p244,Capuche,Terras de São José,terreno,2019,21.9,135000,escriturado,poco_artesiano,9.4,140,535,nascente,São José de Mipibu
+p245,Capuche,Terras de São José,terreno,2022,5.2,282000,posse,poco_artesiano,7.9,260,900,nascente,Nísia Floresta
+p246,Capuche,Terras de São José,terreno,2022,31.6,149000,escriturado,ambos,7.3,190,597,sul,Macaíba
+p247,Capuche,Terras de São José,terreno,2017,27.7,122500,posse,ambos,8.0,140,581,nascente,São José de Mipibu
+p248,Particular,Loteamento Sol Nascente,terreno,2020,8.9,228500,escriturado,caern,8.5,220,622,poente,Natal
+p249,Particular,Loteamento Sol Nascente,terreno,2022,13.6,145500,posse,ambos,9.2,120,434,nascente,Natal
+p250,Particular,Loteamento Sol Nascente,terreno,2025,7.4,194000,escriturado,caern,9.4,150,478,nascente,Natal
+p251,Particular,Loteamento Sol Nascente,terreno,2023,29.4,189000,escriturado,ambos,10.6,170,648,norte,Macaíba
+p252,Particular,Loteamento Sol Nascente,terreno,2017,11.0,157000,posse,poco_artesiano,9.1,200,583,sul,Parnamirim
+p253,Particular,Loteamento Sol Nascente,terreno,2016,9.4,75500,escriturado,caern,7.4,70,230,poente,Natal
+p254,Particular,Loteamento Sol Nascente,terreno,2017,34.5,196000,escriturado,poco_artesiano,5.6,250,732,nascente,Mossoró
+p255,Particular,Loteamento Sol Nascente,terreno,2020,7.8,181000,escriturado,poco_artesiano,9.4,150,539,poente,Parnamirim
+p256,Particular,Loteamento Sol Nascente,terreno,2015,2.9,105000,posse,caern,6.7,90,337,norte,Natal
+p257,Particular,Loteamento Sol Nascente,terreno,2022,10.4,226500,escriturado,caern,5.8,210,656,nascente,Parnamirim
+p258,Particular,Loteamento Sol Nascente,terreno,2021,11.3,234500,escriturado,poco_artesiano,8.6,220,659,nascente,Parnamirim
+p259,Particular,Loteamento Sol Nascente,terreno,2020,8.0,229000,escriturado,poco_artesiano,7.3,170,594,norte,Natal
+p260,Particular,Loteamento Sol Nascente,terreno,2020,10.9,124500,escriturado,caern,10.3,100,336,nascente,Natal
+p261,Particular,Loteamento Sol Nascente,terreno,2016,32.8,130500,escriturado,poco_artesiano,8.0,170,540,nascente,Mossoró
+p262,Particular,Chácaras do Potengi,terreno,2025,20.4,212500,escriturado,ambos,7.5,170,948,sul,São José de Mipibu
+p263,Particular,Chácaras do Potengi,terreno,2015,3.4,208000,posse,ambos,8.4,230,1084,poente,Extremoz
+p264,Particular,Chácaras do Potengi,terreno,2021,25.9,185500,posse,caern,6.6,160,953,nascente,São José de Mipibu
+p265,Particular,Chácaras do Potengi,terreno,2017,24.9,129000,posse,caern,8.0,140,745,norte,Macaíba
+p266,Particular,Chácaras do Potengi,terreno,2023,25.6,172500,posse,poco_artesiano,6.2,190,825,norte,São José de Mipibu
+p267,Particular,Chácaras do Potengi,terreno,2015,7.2,177000,escriturado,poco_artesiano,9.3,140,754,norte,Extremoz
+p268,Particular,Chácaras do Potengi,terreno,2026,3.0,281000,escriturado,ambos,7.9,190,1052,poente,Extremoz
+p269,Particular,Chácaras do Potengi,terreno,2023,27.9,172000,escriturado,caern,7.1,180,809,nascente,Macaíba
+p270,Particular,Chácaras do Potengi,terreno,2016,1.3,254000,escriturado,ambos,9.2,250,1145,poente,Extremoz
+p271,Particular,Chácaras do Potengi,terreno,2019,26.8,114500,escriturado,poco_artesiano,7.2,100,599,norte,Macaíba
+p272,Particular,Chácaras do Potengi,terreno,2021,6.2,147000,escriturado,poco_artesiano,7.7,90,545,sul,Extremoz
+p273,Particular,Chácaras do Potengi,terreno,2016,6.0,220500,posse,caern,8.2,220,1200,norte,Extremoz
+p274,Particular,Chácaras do Potengi,terreno,2022,26.1,145000,escriturado,ambos,8.2,130,666,nascente,São José de Mipibu
+p275,Particular,Chácaras do Potengi,terreno,2015,19.7,100500,escriturado,ambos,7.1,80,499,poente,São José de Mipibu
+p276,Ecomax,Loteamento Costa Branca,terreno,2016,35.9,100500,posse,ambos,6.2,120,442,nascente,Mossoró
+p277,Ecomax,Loteamento Costa Branca,terreno,2015,33.3,99000,escriturado,poco_artesiano,8.5,100,404,norte,Mossoró
+p278,Ecomax,Loteamento Costa Branca,terreno,2024,36.2,113000,escriturado,caern,11.1,110,370,nascente,Mossoró
+p279,Ecomax,Loteamento Costa Branca,terreno,2018,33.9,83500,escriturado,ambos,5.8,100,307,nascente,Mossoró
+p280,Ecomax,Loteamento Costa Branca,terreno,2022,34.0,93500,posse,poco_artesiano,6.7,120,371,poente,Mossoró
+p281,Ecomax,Loteamento Costa Branca,terreno,2018,35.5,172500,escriturado,poco_artesiano,10.3,190,688,norte,Mossoró
+p282,Ecomax,Loteamento Costa Branca,terreno,2025,35.6,160500,escriturado,caern,9.6,170,518,poente,Mossoró
+p283,Ecomax,Loteamento Costa Branca,terreno,2018,33.8,129500,escriturado,caern,9.9,180,543,norte,Mossoró
+p284,Ecomax,Loteamento Costa Branca,terreno,2018,37.9,96500,escriturado,caern,10.1,90,350,poente,Mossoró
+p285,Ecomax,Loteamento Costa Branca,terreno,2021,37.7,232500,escriturado,caern,5.5,200,817,norte,Mossoró
+p286,Ecomax,Loteamento Costa Branca,terreno,2015,36.3,65000,posse,poco_artesiano,7.0,80,275,nascente,Mossoró
+p287,Ecomax,Loteamento Costa Branca,terreno,2024,37.5,245500,escriturado,poco_artesiano,6.6,220,785,nascente,Mossoró
+p288,Ecomax,Loteamento Costa Branca,terreno,2019,32.3,66000,posse,ambos,7.5,90,302,norte,Mossoró
+p289,Ecomax,Loteamento Costa Branca,terreno,2017,35.0,125000,posse,ambos,6.8,160,551,nascente,Mossoró
+p290,Ecomax,Loteamento Costa Branca,terreno,2017,36.4,117000,escriturado,ambos,9.8,140,500,sul,Mossoró
+p291,Cyrela,Torre do Tirol,apartamento,2016,8.1,551000,escriturado,poco_artesiano,4.7,1340,152,poente,Natal
+p292,Cyrela,Torre do Tirol,apartamento,2019,2.2,436500,escriturado,ambos,5.3,930,105,norte,Natal
+p293,Cyrela,Torre do Tirol,apartamento,2022,15.3,331500,escriturado,ambos,9.2,760,90,nascente,Natal
+p294,Cyrela,Torre do Tirol,apartamento,2020,13.3,441000,escriturado,ambos,5.2,940,113,nascente,Natal
+p295,Cyrela,Torre do Tirol,apartamento,2023,7.7,407000,posse,poco_artesiano,9.9,840,113,nascente,Natal
+p296,Cyrela,Torre do Tirol,apartamento,2020,10.1,335500,escriturado,caern,7.9,680,86,nascente,Natal
+p297,Cyrela,Torre do Tirol,apartamento,2026,0.5,446000,posse,ambos,7.5,820,110,nascente,Natal
+p298,Cyrela,Torre do Tirol,apartamento,2020,11.6,313500,escriturado,ambos,7.5,620,86,norte,Natal
+p299,Cyrela,Torre do Tirol,apartamento,2017,14.4,330500,escriturado,caern,8.0,690,92,sul,Natal
+p300,Cyrela,Torre do Tirol,apartamento,2024,1.6,429000,escriturado,caern,8.3,870,95,norte,Natal
+p301,Cyrela,Torre do Tirol,apartamento,2020,5.5,414500,posse,caern,6.4,1070,118,norte,Natal
+p302,Cyrela,Torre do Tirol,apartamento,2016,6.7,583000,escriturado,caern,9.8,1130,159,poente,Natal
+p303,Cyrela,Torre do Tirol,apartamento,2016,11.4,426500,escriturado,ambos,5.3,1040,118,nascente,Natal
+p304,Cyrela,Torre do Tirol,apartamento,2020,13.2,424500,escriturado,caern,9.7,1020,116,nascente,Natal
+p305,Cyrela,Torre do Tirol,apartamento,2018,2.3,563500,escriturado,caern,9.4,1110,155,norte,Natal
+p306,Cyrela,Torre do Tirol,apartamento,2020,9.5,571500,escriturado,ambos,5.2,1250,136,nascente,Natal
+p307,Cyrela,Torre do Tirol,apartamento,2022,13.0,633000,escriturado,caern,9.9,1120,167,norte,Natal
+p308,Cyrela,Torre do Tirol,apartamento,2026,3.1,616000,escriturado,caern,7.0,1020,140,norte,Natal
+p309,Alliance,Edifício Capim Macio,apartamento,2024,6.8,319000,escriturado,caern,5.8,500,69,nascente,Natal
+p310,Alliance,Edifício Capim Macio,apartamento,2025,12.9,426500,escriturado,caern,10.5,780,90,poente,Natal
+p311,Alliance,Edifício Capim Macio,apartamento,2022,4.6,551000,escriturado,caern,8.7,890,134,nascente,Natal
+p312,Alliance,Edifício Capim Macio,apartamento,2015,9.5,354000,escriturado,caern,5.1,720,100,nascente,Natal
+p313,Alliance,Edifício Capim Macio,apartamento,2026,13.6,640500,escriturado,poco_artesiano,7.2,1170,133,nascente,Natal
+p314,Alliance,Edifício Capim Macio,apartamento,2018,14.7,310500,escriturado,ambos,8.1,790,87,norte,Natal
+p315,Alliance,Edifício Capim Macio,apartamento,2022,1.3,409500,escriturado,caern,5.8,700,89,nascente,Natal
+p316,Alliance,Edifício Capim Macio,apartamento,2017,13.9,317000,escriturado,caern,5.0,760,90,norte,Natal
+p317,Alliance,Edifício Capim Macio,apartamento,2023,15.1,333500,escriturado,poco_artesiano,5.5,580,79,nascente,Natal
+p318,Alliance,Edifício Capim Macio,apartamento,2026,10.5,331500,posse,ambos,10.7,710,85,sul,Natal
+p319,Alliance,Edifício Capim Macio,apartamento,2018,11.9,417000,escriturado,ambos,5.3,720,110,nascente,Natal
+p320,Alliance,Edifício Capim Macio,apartamento,2024,15.5,480500,escriturado,caern,8.1,1040,115,sul,Natal
+p321,Alliance,Edifício Capim Macio,apartamento,2018,15.4,299000,escriturado,caern,8.0,630,74,poente,Natal
+p322,Alliance,Edifício Capim Macio,apartamento,2019,12.7,273000,escriturado,ambos,4.7,510,66,nascente,Natal
+p323,Alliance,Edifício Capim Macio,apartamento,2021,2.0,378500,escriturado,caern,10.2,710,86,poente,Natal
+p324,Alliance,Edifício Capim Macio,apartamento,2022,5.5,404000,escriturado,ambos,5.8,600,85,nascente,Natal
+p325,Alliance,Edifício Capim Macio,apartamento,2023,15.8,296000,posse,poco_artesiano,8.8,570,74,nascente,Natal
+p326,Alliance,Edifício Capim Macio,apartamento,2017,6.8,476500,escriturado,caern,9.7,960,120,sul,Natal
+p327,MRV,Parque dos Cajueiros,apartamento,2018,34.9,154000,escriturado,caern,4.5,400,67,poente,Mossoró
+p328,MRV,Parque dos Cajueiros,apartamento,2024,26.9,273500,escriturado,caern,7.6,530,88,nascente,Macaíba
+p329,MRV,Parque dos Cajueiros,apartamento,2022,23.4,216000,escriturado,caern,6.9,480,78,poente,Macaíba
+p330,MRV,Parque dos Cajueiros,apartamento,2022,2.8,276000,escriturado,ambos,6.1,550,76,poente,Parnamirim
+p331,MRV,Parque dos Cajueiros,apartamento,2024,25.3,232000,escriturado,caern,8.8,580,74,nascente,Macaíba
+p332,MRV,Parque dos Cajueiros,apartamento,2022,32.2,175000,escriturado,caern,7.6,440,63,sul,Mossoró
+p333,MRV,Parque dos Cajueiros,apartamento,2016,3.0,156000,posse,caern,5.9,330,57,sul,Natal
+p334,MRV,Parque dos Cajueiros,apartamento,2018,4.4,225000,posse,caern,9.9,440,75,norte,Parnamirim
+p335,MRV,Parque dos Cajueiros,apartamento,2023,14.0,258500,escriturado,caern,8.3,510,73,poente,Parnamirim
+p336,MRV,Parque dos Cajueiros,apartamento,2017,15.1,233000,escriturado,caern,7.3,440,74,norte,Parnamirim
+p337,MRV,Parque dos Cajueiros,apartamento,2020,9.3,266000,escriturado,caern,5.7,540,82,norte,Parnamirim
+p338,MRV,Parque dos Cajueiros,apartamento,2015,32.3,170000,escriturado,ambos,5.5,480,73,norte,Mossoró
+p339,MRV,Parque dos Cajueiros,apartamento,2019,1.9,235500,escriturado,caern,6.0,530,67,norte,Parnamirim
+p340,MRV,Parque dos Cajueiros,apartamento,2019,7.3,233500,escriturado,caern,7.1,460,68,nascente,Parnamirim
+p341,MRV,Parque dos Cajueiros,apartamento,2015,35.0,154000,escriturado,caern,8.6,550,71,nascente,Mossoró
+p342,MRV,Parque dos Cajueiros,apartamento,2018,14.6,187500,escriturado,caern,5.8,460,60,poente,Parnamirim
+p343,MRV,Parque dos Cajueiros,apartamento,2016,34.7,223000,escriturado,caern,6.7,610,88,poente,Mossoró
+p344,Direcional,Residencial Brisas Potiguares,apartamento,2019,6.5,351500,escriturado,ambos,8.0,910,108,nascente,Parnamirim
+p345,Direcional,Residencial Brisas Potiguares,apartamento,2018,32.0,268000,escriturado,caern,8.5,580,96,poente,Mossoró
+p346,Direcional,Residencial Brisas Potiguares,apartamento,2017,29.3,241500,escriturado,caern,9.5,730,96,nascente,Macaíba
+p347,Direcional,Residencial Brisas Potiguares,apartamento,2020,8.5,280500,escriturado,caern,8.0,480,79,nascente,Parnamirim
+p348,Direcional,Residencial Brisas Potiguares,apartamento,2020,27.6,302500,escriturado,caern,6.4,730,108,nascente,Macaíba
+p349,Direcional,Residencial Brisas Potiguares,apartamento,2019,3.3,252500,escriturado,poco_artesiano,6.5,450,72,norte,Parnamirim
+p350,Direcional,Residencial Brisas Potiguares,apartamento,2024,32.2,322000,escriturado,caern,6.7,880,106,nascente,Mossoró
+p351,Direcional,Residencial Brisas Potiguares,apartamento,2015,5.8,331500,escriturado,poco_artesiano,8.2,780,102,norte,Parnamirim
+p352,Direcional,Residencial Brisas Potiguares,apartamento,2020,14.1,295000,escriturado,ambos,5.1,620,97,norte,Extremoz
+p353,Direcional,Residencial Brisas Potiguares,apartamento,2023,5.6,373000,escriturado,caern,7.4,830,106,norte,Parnamirim
+p354,Direcional,Residencial Brisas Potiguares,apartamento,2020,2.2,350500,escriturado,caern,8.8,780,105,poente,Parnamirim
+p355,Direcional,Residencial Brisas Potiguares,apartamento,2018,5.0,254000,escriturado,ambos,9.5,540,85,nascente,Extremoz
+p356,Direcional,Residencial Brisas Potiguares,apartamento,2024,13.9,282500,escriturado,poco_artesiano,5.5,560,81,nascente,Parnamirim
+p357,Direcional,Residencial Brisas Potiguares,apartamento,2025,28.8,235000,escriturado,caern,6.1,600,75,nascente,Macaíba
+p358,Direcional,Residencial Brisas Potiguares,apartamento,2024,34.9,173500,escriturado,caern,8.0,490,63,poente,Mossoró
+p359,Direcional,Residencial Brisas Potiguares,apartamento,2023,21.5,240000,escriturado,ambos,6.8,480,75,poente,Macaíba
+p360,Direcional,Residencial Brisas Potiguares,apartamento,2019,4.9,330500,escriturado,ambos,8.3,630,92,nascente,Parnamirim
