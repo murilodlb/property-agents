@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Multi-agent and MCP benchmark project for real-estate search across Rio Grande do Norte"
 requires-python = ">=3.12"
 dependencies = [
+    "fastmcp",
     "numpy",
     "pandas",
 ]
