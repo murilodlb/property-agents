@@ -1,0 +1,88 @@
+prop_id,source,external_code,title,prop_type,city,neighborhood,price_brl,appraisal_value_brl,discount_pct,area_m2,bedrooms,bathrooms,garage_spots,condo_fee_brl,iptu_brl,sale_modality,url
+r001,pereseperes.com.br,AP1880-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,550000.0,,,72.0,2,2,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-2-quartos-72-m/AP1880-PEP
+r002,pereseperes.com.br,AP2044-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,300000.0,,,56.0,2,2,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-2-quartos-56-m/AP2044-PEP
+r003,pereseperes.com.br,FL0025-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,379000.0,,,56.0,2,2,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/flat-natal-2-quartos-56-m/FL0025-PEP
+r004,pereseperes.com.br,AP2066-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,430000.0,,,60.0,2,1,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-2-quartos-60-m/AP2066-PEP
+r005,pereseperes.com.br,LF0004-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,440000.0,,,45.0,1,2,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/loft-natal-1-quarto-45-m/LF0004-PEP
+r006,pereseperes.com.br,AP2101-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,489000.0,,,57.0,2,2,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-2-quartos-57-m/AP2101-PEP
+r007,pereseperes.com.br,AP1989-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,550000.0,,,114.75,2,3,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-2-quartos-115-m/AP1989-PEP
+r008,pereseperes.com.br,AP2154-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,1499000.0,,,55.0,2,2,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-2-quartos-55-m/AP2154-PEP
+r009,pereseperes.com.br,AP2164-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,699000.0,,,79.0,3,1,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-3-quartos-79-m/AP2164-PEP
+r010,pereseperes.com.br,AP2078-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,700000.0,,,97.0,3,3,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-3-quartos-97-m/AP2078-PEP
+r011,pereseperes.com.br,CO0009-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,730000.0,,,171.0,3,4,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/cobertura-natal-3-quartos-171-m/CO0009-PEP
+r012,pereseperes.com.br,AP2000-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,1100000.0,,,101.0,3,2,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-3-quartos-101-m/AP2000-PEP
+r013,pereseperes.com.br,CA0897-PEP,Alecrim - Natal - RN,casa,Natal,Lagoa Nova,470000.0,,,100.0,3,3,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-100-m/CA0897-PEP
+r014,pereseperes.com.br,CA0750-PEP,Barro Vermelho - Natal - RN,casa,Natal,Barro Vermelho,350000.0,,,200.0,3,3,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-200-m/CA0750-PEP
+r015,pereseperes.com.br,CA0640-PEP,Barro Vermelho - Natal - RN,casa,Natal,Barro Vermelho,360000.0,,,320.0,3,1,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-320-m/CA0640-PEP
+r016,pereseperes.com.br,CA0890-PEP,Barro Vermelho - Natal - RN,casa,Natal,Barro Vermelho,380000.0,,,180.0,3,2,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-180-m/CA0890-PEP
+r017,pereseperes.com.br,CA0419-PEP,Lagoa Seca - Natal - RN,casa,Natal,Lagoa Seca,450000.0,,,199.0,3,2,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-199-m/CA0419-PEP
+r018,pereseperes.com.br,CA0550-PEP,Lagoa Nova - Natal - RN,casa,Natal,Lagoa Nova,470000.0,,,214.0,4,3,3,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-214-m/CA0550-PEP
+r019,pereseperes.com.br,CA0876-PEP,Neópolis - Natal - RN,casa,Natal,Ponta Negra,650000.0,,,120.0,4,1,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-120-m/CA0876-PEP
+r020,pereseperes.com.br,CA0539-PEP,Ponta Negra - Natal - RN,casa,Natal,Ponta Negra,480000.0,,,450.0,3,1,3,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-450-m/CA0539-PEP
+r021,pereseperes.com.br,CA0424-PEP,Candelária - Natal - RN,casa,Natal,Candelária,490000.0,,,203.0,3,1,4,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-203-m/CA0424-PEP
+r022,pereseperes.com.br,CA0585-PEP,Candelária - Natal - RN,casa,Natal,Candelária,495000.0,,,200.0,3,1,3,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-200-m/CA0585-PEP
+r023,pereseperes.com.br,CA0611-PEP,Cidade Alta - Natal - RN,casa,Natal,Cidade Alta,540000.0,,,500.0,6,3,6,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-6-quartos-500-m/CA0611-PEP
+r024,pereseperes.com.br,CA0726-PEP,Ponta Negra - Natal - RN,casa,Natal,Ponta Negra,550000.0,,,200.0,3,3,5,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-200-m/CA0726-PEP
+r025,pereseperes.com.br,CA0822-PEP,Lagoa Nova - Natal - RN,casa,Natal,Lagoa Nova,600000.0,,,396.0,3,3,4,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-396-m/CA0822-PEP
+r026,pereseperes.com.br,CA0815-PEP,Capim Macio - Natal - RN,casa,Natal,Capim Macio,1350000.0,,,176.0,4,5,4,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-176-m/CA0815-PEP
+r027,pereseperes.com.br,CA0389-PEP,Lagoa Nova - Natal - RN,casa,Natal,Lagoa Nova,670000.0,,,290.0,4,1,3,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-290-m/CA0389-PEP
+r028,pereseperes.com.br,CA0754-PEP,Barro Vermelho - Natal - RN,casa,Natal,Barro Vermelho,720000.0,,,650.0,7,5,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-7-quartos-650-m/CA0754-PEP
+r029,pereseperes.com.br,CA0703-PEP,Lagoa Nova - Natal - RN,casa,Natal,Lagoa Nova,750000.0,,,400.0,4,5,4,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-400-m/CA0703-PEP
+r030,pereseperes.com.br,CA0702-PEP,Capim Macio - Natal - RN,casa,Natal,Capim Macio,850000.0,,,698.0,4,5,4,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-698-m/CA0702-PEP
+r031,pereseperes.com.br,CA0722-PEP,Candelária - Natal - RN,casa,Natal,Candelária,850000.0,,,360.0,5,6,10,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-5-quartos-360-m/CA0722-PEP
+r032,pereseperes.com.br,CA0878-PEP,Cidade Satélite - Natal - RN,casa,Natal,Cidade Satélite,930000.0,,,200.0,4,4,4,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-200-m/CA0878-PEP
+r033,pereseperes.com.br,CA0388-PEP,Capim Macio - Natal - RN,casa,Natal,Capim Macio,1350000.0,,,340.0,4,1,6,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-340-m/CA0388-PEP
+r034,pereseperes.com.br,AP2011-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,260000.0,,,57.0,2,2,,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-2-quartos-57-m/AP2011-PEP
+r035,pereseperes.com.br,FL0027-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,280000.0,,,72.0,2,,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/flat-natal-2-quartos-72-m/FL0027-PEP
+r036,pereseperes.com.br,AP2203-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,285000.0,,,56.0,2,,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-2-quartos-56-m/AP2203-PEP
+r037,pereseperes.com.br,AP2243-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,300000.0,,,55.0,2,,1,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-2-quartos-55-m/AP2243-PEP
+r038,pereseperes.com.br,AP2255-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,430000.0,,,84.0,3,,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-3-quartos-84-m/AP2255-PEP
+r039,pereseperes.com.br,AP2175-PEP,Ponta Negra - Natal - RN,apartamento,Natal,Ponta Negra,1499000.0,,,115.0,4,,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/apartamento-natal-4-quartos-115-m/AP2175-PEP
+r040,pereseperes.com.br,CA0892-PEP,Candelária - Natal - RN,casa,Natal,Candelária,395000.0,,,240.0,3,,3,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-240-m/CA0892-PEP
+r041,pereseperes.com.br,CA0395-PEP,San Vale - Natal - RN,casa,Natal,San Vale,420000.0,,,300.0,4,,3,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-300-m/CA0395-PEP
+r042,pereseperes.com.br,CA0853-PEP,Neópolis - Natal - RN,casa,Natal,Neópolis,499000.0,,,90.82,3,,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-91-m/CA0853-PEP
+r043,pereseperes.com.br,CA0898-PEP,Lagoa Nova - Natal - RN,casa,Natal,Lagoa Nova,550000.0,,,250.0,3,,4,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-250-m/CA0898-PEP
+r044,pereseperes.com.br,CA0880-PEP,Lagoa Nova - Natal - RN,casa,Natal,Lagoa Nova,650000.0,,,406.0,3,,4,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-406-m/CA0880-PEP
+r045,pereseperes.com.br,CA0760-PEP,Petrópolis - Natal - RN,casa,Natal,Petrópolis,700000.0,,,305.15,1,1,,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-1-quarto-305-m/CA0760-PEP
+r046,pereseperes.com.br,CA0884-PEP,Cidade Satélite - Natal - RN,casa,Natal,Cidade Satélite,890000.0,,,198.0,3,,2,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-198-m/CA0884-PEP
+r047,ibeda.com.br,569,Apartamento em Ponta Negra,apartamento,Natal,Ponta Negra,744000.0,,,92.0,3,,,,,Venda Padrão,https://ibeda.com.br/imovel/apartamento-a-venda-3-quartos-ponta-negra-natal-rn-92m2-id-569
+r048,ibeda.com.br,1303,Apartamento em Ponta Negra,apartamento,Natal,Ponta Negra,533213.0,,,37.0,1,,,,,Venda Padrão,https://ibeda.com.br/imovel/studio-a-venda-1-quarto-ponta-negra-natal-rn-37m2-id-1303
+r049,ibeda.com.br,422,Apartamento em Ponta Negra,apartamento,Natal,Ponta Negra,418000.0,,,27.0,1,,,,,Venda Padrão,https://ibeda.com.br/imovel/apartamento-a-venda-1-quarto-ponta-negra-natal-rn-27m2-id-422
+r050,ibeda.com.br,475,Apartamento em Ponta Negra,apartamento,Natal,Ponta Negra,418000.0,,,27.0,1,,,,,Venda Padrão,https://ibeda.com.br/imovel/apartamento-a-venda-1-quarto-ponta-negra-natal-rn-27m2-id-475
+r051,ibeda.com.br,11,Apartamento em Ponta Negra,apartamento,Natal,Ponta Negra,817095.0,,,79.0,3,,,,,Venda Padrão,https://ibeda.com.br/imovel/apartamento-a-venda-3-quartos-ponta-negra-natal-rn-79m2-id-11
+r052,ibeda.com.br,345,Apartamento em Tirol,apartamento,Natal,Tirol,1700000.0,,,120.0,3,,,,,Venda Padrão,https://ibeda.com.br/imovel/apartamento-a-venda-3-quartos-tirol-natal-rn-120m2-id-345
+r053,ibeda.com.br,1302,Apartamento em Capim Macio,apartamento,Natal,Capim Macio,432900.0,,,28.0,1,,,,,Venda Padrão,https://ibeda.com.br/imovel/studio-a-venda-1-quarto-capim-macio-natal-rn-28m2-id-1302
+r054,ibeda.com.br,405,Apartamento em Lagoa Nova,apartamento,Natal,Lagoa Nova,1589100.0,,,164.0,4,,,,,Venda Padrão,https://ibeda.com.br/imovel/apartamento-a-venda-4-quartos-lagoa-nova-natal-rn-164m2-id-405
+r055,pereseperes.com.br,CA0881-PEP,Barro Vermelho - Natal - RN,casa,Natal,Barro Vermelho,320000.0,,,270.0,2,,,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-2-quartos-270-m/CA0881-PEP
+r056,pereseperes.com.br,CA0851-PEP,Lagoa Seca - Natal - RN,casa,Natal,Lagoa Seca,350000.0,,,340.0,4,,,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos-340-m/CA0851-PEP
+r057,pereseperes.com.br,CA0694-PEP,Candelária - Natal - RN,casa,Natal,Candelária,440000.0,,,,4,4,3,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-4-quartos/CA0694-PEP
+r058,pereseperes.com.br,CA0808-PEP,Candelária - Natal - RN,casa,Natal,Candelária,650000.0,,,210.0,,5,,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-210-m/CA0808-PEP
+r059,pereseperes.com.br,CA0231-PEP,Lagoa Nova - Natal - RN,casa,Natal,Lagoa Nova,850000.0,,,,3,4,10,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos/CA0231-PEP
+r060,pereseperes.com.br,CA0636-PEP,Petrópolis - Natal - RN,casa,Natal,Petrópolis,870000.0,,,,3,5,3,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-3-quartos-10-m/CA0636-PEP
+r061,imoveispontanegra.com.br,113,Apartamento 1 Quarto,apartamento,Natal,Ponta Negra,349000.0,,,,1,1,1,,,Venda Padrão,https://www.imoveispontanegra.com.br/imovel/3423631/apartamento-1-quarto-venda-natal-rn-ponta-negra
+r062,imoveispontanegra.com.br,018,Apartamento 2 Quartos,apartamento,Natal,Ponta Negra,370000.0,,,,2,2,2,,,Venda Padrão,https://www.imoveispontanegra.com.br/imovel/3936930/apartamento-2-quartos-venda-natal-rn-ponta-negra
+r063,imoveispontanegra.com.br,014,Apartamento 2 Quartos,apartamento,Natal,Ponta Negra,225000.0,,,,2,2,1,,,Venda Padrão,https://www.imoveispontanegra.com.br/imovel/3856992/apartamento-2-quartos-venda-natal-rn-ponta-negra
+r064,suzananeryimoveis.com.br,AP00407,APARTAMENTO,apartamento,Natal,Ponta Negra,275000.0,,,,2,2,1,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar/rn/natal/ponta-negra/apartamento/11650333
+r065,suzananeryimoveis.com.br,AP00449,APARTAMENTO,apartamento,Natal,Ponta Negra,390000.0,,,,1,1,1,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar/rn/natal/ponta-negra/apartamento/11650985
+r066,suzananeryimoveis.com.br,CC00296,CASA EM CONDOMÍNIO,casa,Natal,Ponta Negra,690000.0,,,,3,2,2,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar/rn/natal/ponta-negra/casa-em-condominio/11651232
+r067,suzananeryimoveis.com.br,CC00022,CASA EM CONDOMÍNIO,casa,Natal,Ponta Negra,700000.0,,,,3,3,1,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar/rn/natal/ponta-negra/casa-em-condominio/11648017
+r068,suzananeryimoveis.com.br,CC00039,CASA EM CONDOMÍNIO,casa,Natal,Ponta Negra,1000000.0,,,,4,3,4,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar/rn/natal/ponta-negra/casa-em-condominio/11647984
+r069,suzananeryimoveis.com.br,AP00490,APARTAMENTO,apartamento,Natal,Ponta Negra,1850000.0,,,,3,3,1,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar/rn/natal/ponta-negra/apartamento/11651154
+r070,ibeda.com.br,791,Casa em Natal,casa,Natal,,2600000.0,,,560.0,5,,,,,Venda Padrão,https://ibeda.com.br/imovel/casa-de-condominio-a-venda-5-quartos-candelaria-natal-rn-560m2-id-791
+r071,pereseperes.com.br,CA0833-PEP,Barro Vermelho - Natal - RN,casa,Natal,Barro Vermelho,650000.0,,,442.0,,,,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-442-m/CA0833-PEP
+r072,suzananeryimoveis.com.br,AP00410,APARTAMENTO,apartamento,Natal,Ponta Negra,698000.0,,,,2,2,,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar/rn/natal/ponta-negra/apartamento/11650660
+r073,suzananeryimoveis.com.br,AP00302,APARTAMENTO,apartamento,Natal,Ponta Negra,753000.0,,,,2,2,,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar/rn/natal/ponta-negra/apartamento/11649794
+r074,pereseperes.com.br,CA0870-PEP,Alecrim - Natal - RN,casa,Natal,Alecrim,350000.0,,,,2,,,,,Venda Padrão,https://www.pereseperes.com.br/imovel/casa-natal-2-quartos/CA0870-PEP
+r075,imoveispontanegra.com.br,4449980,Apartamento em Ponta Negra,apartamento,Natal,Ponta Negra,379000.0,,,,1,,,,,Venda Padrão,https://www.imoveispontanegra.com.br/imovel/4449980/casa-venda-natal-rn-ponta-negra
+r076,imoveispontanegra.com.br,3423631,Apartamento 1 Quarto,apartamento,Natal,Ponta Negra,349000.0,,,,1,,,,,Venda Padrão,https://www.imoveispontanegra.com.br/imovel/3423631/apartamento-1-quarto-venda-natal-rn-ponta-negra
+r077,imoveispontanegra.com.br,3936930,Apartamento 2 Quartos,apartamento,Natal,Ponta Negra,370000.0,,,,2,,,,,Venda Padrão,https://www.imoveispontanegra.com.br/imovel/3936930/apartamento-2-quartos-venda-natal-rn-ponta-negra
+r078,imoveispontanegra.com.br,3856992,Apartamento 2 Quartos,apartamento,Natal,Ponta Negra,225000.0,,,,2,,,,,Venda Padrão,https://www.imoveispontanegra.com.br/imovel/3856992/apartamento-2-quartos-venda-natal-rn-ponta-negra
+r079,imoveispontanegra.com.br,,Apartamento 1 Quarto,apartamento,Natal,Ponta Negra,349000.0,,,,1,,,,,Venda Padrão,https://www.imoveispontanegra.com.br/
+r080,imoveispontanegra.com.br,,Apartamento 2 Quartos,apartamento,Natal,Ponta Negra,370000.0,,,,2,,,,,Venda Padrão,https://www.imoveispontanegra.com.br/
+r081,imoveispontanegra.com.br,,Apartamento 2 Quartos,apartamento,Natal,Ponta Negra,225000.0,,,,2,,,,,Venda Padrão,https://www.imoveispontanegra.com.br/
+r082,pereseperes.com.br,,Apartamento em Ponta Negra,apartamento,Natal,Ponta Negra,430000.0,,,,,,,,,Venda Padrão,https://www.pereseperes.com.br/imoveis/a-venda/apartamento/natal/ponta-negra
+r083,imoveispontanegra.com.br,,Casa em Ponta Negra,casa,Natal,Ponta Negra,379000.0,,,,,,,,,Venda Padrão,https://www.imoveispontanegra.com.br/
+r084,suzananeryimoveis.com.br,,CASA EM CONDOMÍNIO,casa,Natal,Ponta Negra,690000.0,,,,,,,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar-ou-alugar/rn/natal/ponta-negra/
+r085,suzananeryimoveis.com.br,,CASA EM CONDOMÍNIO,casa,Natal,Ponta Negra,700000.0,,,,,,,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar-ou-alugar/rn/natal/ponta-negra/
+r086,suzananeryimoveis.com.br,,CASA EM CONDOMÍNIO,casa,Natal,Ponta Negra,1000000.0,,,,,,,,,Venda Padrão,https://suzananeryimoveis.com.br/comprar-ou-alugar/rn/natal/ponta-negra/
+r087,emobiimobiliaria.com.br,,Apartamento em Ponta Negra,apartamento,Natal,Ponta Negra,230000.0,,,,,,,,,Venda Padrão,https://emobiimobiliaria.com.br/

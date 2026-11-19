@@ -2,7 +2,7 @@
 """Deterministic synthetic dataset generator for the property-agents benchmark.
 
 Generates 360 real-estate listings across Rio Grande do Norte, Brazil, writes
-them to ``data/properties.csv``, and runs schema + ground-truth verification.
+them to ``data/synthetic_properties.csv``, and runs schema + ground-truth verification.
 """
 
 from __future__ import annotations
@@ -32,18 +32,18 @@ TOTAL_ROWS = 360
 
 COLUMNS = [
     "prop_id",
-    "builder",
+    # "builder",
     "title",
     "prop_type",
-    "year_delivery",
-    "dist_beach_km",
+    # "year_delivery",
+    # "dist_beach_km",
     "price_brl",
-    "documentation",
-    "water_source",
-    "yield_rate_pct",
-    "monthly_fee_brl",
+    # "documentation",
+    # "water_source",
+    # "yield_rate_pct",
+    # "monthly_fee_brl",
     "area_m2",
-    "sun_position",
+    # "sun_position",
     "city",
 ]
 
@@ -131,7 +131,8 @@ YIELD_TYPE_BONUS: dict[str, float] = {
 
 ONE_DECIMAL_RE = re.compile(r"^(?:0|[1-9][0-9]*)\.[0-9]$")
 POSITIVE_INT_RE = re.compile(r"^[1-9][0-9]*$")
-INT_COLUMNS = ("year_delivery", "price_brl", "monthly_fee_brl", "area_m2")
+# INT_COLUMNS = ("year_delivery", "price_brl", "monthly_fee_brl", "area_m2")
+INT_COLUMNS = ("price_brl", "area_m2")
 
 # 24 distinct developments/allotments summing to 360 rows:
 # 110 apartamento (40 + 70), 150 casa, 100 terreno.
@@ -404,122 +405,130 @@ ANCHOR_ROWS: dict[str, dict[str, Any]] = {
     # Anchor Group 1 — Top Houses up to R$ 350,000
     "p082": {
         "prop_id": "p082",
-        "builder": "Ecomax",
+        # "builder": "Ecomax",
         "title": "Bosque das Dunas",
         "prop_type": "casa",
-        "year_delivery": 2024,
-        "dist_beach_km": 6.5,
+        # "year_delivery": 2024,
+        # "dist_beach_km": 6.5,
         "price_brl": 340000,
-        "documentation": "escriturado",
-        "water_source": "ambos",
-        "yield_rate_pct": 7.4,
-        "monthly_fee_brl": 480,
+        # "documentation": "escriturado",
+        # "water_source": "ambos",
+        # "yield_rate_pct": 7.4,
+        # "monthly_fee_brl": 480,
         "area_m2": 180,
-        "sun_position": "poente",
+        # "sun_position": "poente",
         "city": "Parnamirim",
     },
     "p081": {
         "prop_id": "p081",
-        "builder": "Ecomax",
+        # "builder": "Ecomax",
         "title": "Bosque das Dunas",
         "prop_type": "casa",
-        "year_delivery": 2024,
-        "dist_beach_km": 8.2,
+        # "year_delivery": 2024,
+        # "dist_beach_km": 8.2,
         "price_brl": 315000,
-        "documentation": "escriturado",
-        "water_source": "caern",
-        "yield_rate_pct": 8.9,
-        "monthly_fee_brl": 390,
+        # "documentation": "escriturado",
+        # "water_source": "caern",
+        # "yield_rate_pct": 8.9,
+        # "monthly_fee_brl": 390,
         "area_m2": 180,
-        "sun_position": "nascente",
+        # "sun_position": "nascente",
         "city": "Natal",
     },
     "p109": {
         "prop_id": "p109",
-        "builder": "Alliance",
+        # "builder": "Alliance",
         "title": "Vila Atlântica",
         "prop_type": "casa",
-        "year_delivery": 2024,
-        "dist_beach_km": 11.0,
+        # "year_delivery": 2024,
+        # "dist_beach_km": 11.0,
         "price_brl": 345000,
-        "documentation": "escriturado",
-        "water_source": "ambos",
-        "yield_rate_pct": 9.6,
-        "monthly_fee_brl": 520,
+        # "documentation": "escriturado",
+        # "water_source": "ambos",
+        # "yield_rate_pct": 9.6,
+        # "monthly_fee_brl": 520,
         "area_m2": 155,
-        "sun_position": "nascente",
+        # "sun_position": "nascente",
         "city": "Nísia Floresta",
     },
     # Anchor Group 2 — Top Terrains up to R$ 150,000
     "p199": {
         "prop_id": "p199",
-        "builder": "Capuche",
+        # "builder": "Capuche",
         "title": "Quintas de Mipibu",
         "prop_type": "terreno",
-        "year_delivery": 2026,
-        "dist_beach_km": 21.5,
+        # "year_delivery": 2026,
+        # "dist_beach_km": 21.5,
         "price_brl": 145000,
-        "documentation": "escriturado",
-        "water_source": "poco_artesiano",
-        "yield_rate_pct": 10.8,
-        "monthly_fee_brl": 110,
+        # "documentation": "escriturado",
+        # "water_source": "poco_artesiano",
+        # "yield_rate_pct": 10.8,
+        # "monthly_fee_brl": 110,
         "area_m2": 450,
-        "sun_position": "nascente",
+        # "sun_position": "nascente",
         "city": "São José de Mipibu",
     },
     "p204": {
         "prop_id": "p204",
-        "builder": "Direcional",
+        # "builder": "Direcional",
         "title": "Loteamento Brisa do Sul",
         "prop_type": "terreno",
-        "year_delivery": 2025,
-        "dist_beach_km": 14.0,
+        # "year_delivery": 2025,
+        # "dist_beach_km": 14.0,
         "price_brl": 138000,
-        "documentation": "posse",
-        "water_source": "caern",
-        "yield_rate_pct": 8.2,
-        "monthly_fee_brl": 90,
+        # "documentation": "posse",
+        # "water_source": "caern",
+        # "yield_rate_pct": 8.2,
+        # "monthly_fee_brl": 90,
         "area_m2": 600,
-        "sun_position": "sul",
+        # "sun_position": "sul",
         "city": "Extremoz",
     },
     # Anchor Group 3 — Specific Comparison & Detail Targets
     "p003": {
         "prop_id": "p003",
-        "builder": "Moura Dubeux",
+        # "builder": "Moura Dubeux",
         "title": "Solar Potengi",
         "prop_type": "apartamento",
-        "year_delivery": 2022,
-        "dist_beach_km": 2.1,
+        # "year_delivery": 2022,
+        # "dist_beach_km": 2.1,
         "price_brl": 420000,
-        "documentation": "escriturado",
-        "water_source": "caern",
-        "yield_rate_pct": 6.8,
-        "monthly_fee_brl": 890,
+        # "documentation": "escriturado",
+        # "water_source": "caern",
+        # "yield_rate_pct": 6.8,
+        # "monthly_fee_brl": 890,
         "area_m2": 92,
-        "sun_position": "nascente",
+        # "sun_position": "nascente",
         "city": "Natal",
     },
     "p061": {
         "prop_id": "p061",
-        "builder": "MRV",
+        # "builder": "MRV",
         "title": "Reserva Nísia",
         "prop_type": "casa",
-        "year_delivery": 2023,
-        "dist_beach_km": 9.4,
+        # "year_delivery": 2023,
+        # "dist_beach_km": 9.4,
         "price_brl": 348000,
-        "documentation": "posse",
-        "water_source": "poco_artesiano",
-        "yield_rate_pct": 7.1,
-        "monthly_fee_brl": 310,
+        # "documentation": "posse",
+        # "water_source": "poco_artesiano",
+        # "yield_rate_pct": 7.1,
+        # "monthly_fee_brl": 310,
         "area_m2": 135,
-        "sun_position": "poente",
+        # "sun_position": "poente",
         "city": "Macaíba",
     },
 }
 
 ANCHOR_SORT_KEYS: frozenset[tuple[int, float]] = frozenset(
-    (row["year_delivery"], row["dist_beach_km"]) for row in ANCHOR_ROWS.values()
+    {
+        (2024, 6.5),
+        (2024, 8.2),
+        (2024, 11.0),
+        (2026, 21.5),
+        (2025, 14.0),
+        (2022, 2.1),
+        (2023, 9.4),
+    }
 )
 
 
@@ -657,8 +666,8 @@ def _generate_listing(
     city = _weighted_choice(dev["cities"])
     area_m2 = random.randint(area_min, area_max)
     year_delivery = random.randint(2015, 2026)
-    documentation, water_source = _sample_doc_and_water(prop_type)
-    sun_position = _weighted_choice(SUN_POSITION_WEIGHTS)
+    documentation, _water_source = _sample_doc_and_water(prop_type)
+    _sun_position = _weighted_choice(SUN_POSITION_WEIGHTS)
     dist_beach_km = _sample_unique_dist(year_delivery, city, used_sort_keys)
     noise = random.uniform(0.92, 1.08)
 
@@ -684,23 +693,23 @@ def _generate_listing(
         noise=noise,
         used_sort_keys=used_sort_keys,
     )
-    yield_rate_pct = _compute_yield_rate(prop_type, dist_beach_km, year_delivery)
-    monthly_fee_brl = _compute_monthly_fee(area_m2, dev["fee_per_m2"])
+    _yield_rate_pct = _compute_yield_rate(prop_type, dist_beach_km, year_delivery)
+    _monthly_fee_brl = _compute_monthly_fee(area_m2, dev["fee_per_m2"])
 
     return {
         "prop_id": prop_id,
-        "builder": dev["builder"],
+        # "builder": dev["builder"],
         "title": dev["title"],
         "prop_type": prop_type,
-        "year_delivery": year_delivery,
-        "dist_beach_km": dist_beach_km,
+        # "year_delivery": year_delivery,
+        # "dist_beach_km": dist_beach_km,
         "price_brl": price_brl,
-        "documentation": documentation,
-        "water_source": water_source,
-        "yield_rate_pct": yield_rate_pct,
-        "monthly_fee_brl": monthly_fee_brl,
+        # "documentation": documentation,
+        # "water_source": _water_source,
+        # "yield_rate_pct": _yield_rate_pct,
+        # "monthly_fee_brl": _monthly_fee_brl,
         "area_m2": area_m2,
-        "sun_position": sun_position,
+        # "sun_position": _sun_position,
         "city": city,
     }
 
@@ -724,8 +733,10 @@ def generate_rows() -> list[dict[str, Any]]:
 
             if prop_id in ANCHOR_ROWS:
                 anchor = dict(ANCHOR_ROWS[prop_id])
-                expected_meta = (dev["title"], dev["builder"], dev["prop_type"])
-                actual_meta = (anchor["title"], anchor["builder"], anchor["prop_type"])
+                # expected_meta = (dev["title"], dev["builder"], dev["prop_type"])
+                # actual_meta = (anchor["title"], anchor["builder"], anchor["prop_type"])
+                expected_meta = (dev["title"], dev["prop_type"])
+                actual_meta = (anchor["title"], anchor["prop_type"])
                 assert actual_meta == expected_meta, (
                     f"Anchor {prop_id} placed in mismatched development block {dev['title']}"
                 )
@@ -744,36 +755,35 @@ def write_csv(rows: list[dict[str, Any]], output_path: Path) -> None:
         writer.writeheader()
         for row in rows:
             formatted = dict(row)
-            formatted["dist_beach_km"] = f"{row['dist_beach_km']:.1f}"
-            formatted["yield_rate_pct"] = f"{row['yield_rate_pct']:.1f}"
+            # formatted["dist_beach_km"] = f"{row['dist_beach_km']:.1f}"
+            # formatted["yield_rate_pct"] = f"{row['yield_rate_pct']:.1f}"
             writer.writerow(formatted)
 
 
 def _validate_row_constraints(row: dict[str, Any]) -> None:
-    """Validate domain enums, numeric bounds, and city-to-beach realism for one row."""
-    assert row["builder"] in VALID_BUILDERS, f"Bad builder: {row}"
+    """Validate domain enums and numeric bounds for one row."""
+    # assert row["builder"] in VALID_BUILDERS, f"Bad builder: {row}"
     assert row["prop_type"] in VALID_PROP_TYPES, f"Bad prop_type: {row}"
-    if row["prop_type"] == "terreno":
-        assert row["builder"] in TERRENO_BUILDERS, f"Invalid terreno builder: {row}"
-    assert 2015 <= row["year_delivery"] <= 2026, f"Bad year_delivery: {row}"
-    assert 0.4 <= row["dist_beach_km"] <= 38.0, f"Bad dist_beach_km: {row}"
+    # if row["prop_type"] == "terreno":
+    #     assert row["builder"] in TERRENO_BUILDERS, f"Invalid terreno builder: {row}"
+    # assert 2015 <= row["year_delivery"] <= 2026, f"Bad year_delivery: {row}"
+    # assert 0.4 <= row["dist_beach_km"] <= 38.0, f"Bad dist_beach_km: {row}"
     assert row["city"] in VALID_CITIES, f"Bad city: {row}"
-    # Only anchor p061 (Macaíba at 9.4 km) is intentionally outside its city's range.
-    if row["prop_id"] != "p061":
-        c_low, c_high = CITY_BEACH_RANGES[row["city"]]
-        assert c_low <= row["dist_beach_km"] <= c_high, f"Unrealistic city dist: {row}"
+    # if row["prop_id"] != "p061":
+    #     c_low, c_high = CITY_BEACH_RANGES[row["city"]]
+    #     assert c_low <= row["dist_beach_km"] <= c_high, f"Unrealistic city dist: {row}"
 
     p_low, p_high = PRICE_BOUNDS[row["prop_type"]]
     assert p_low <= row["price_brl"] <= p_high, f"Bad price_brl: {row}"
     assert row["price_brl"] % 500 == 0, f"Price not multiple of 500: {row}"
-    assert row["documentation"] in VALID_DOCUMENTATION, f"Bad documentation: {row}"
-    assert row["water_source"] in VALID_WATER_SOURCES, f"Bad water_source: {row}"
-    assert 4.5 <= row["yield_rate_pct"] <= 11.5, f"Bad yield_rate_pct: {row}"
-    assert 60 <= row["monthly_fee_brl"] <= 1600, f"Bad monthly_fee_brl: {row}"
-    assert row["monthly_fee_brl"] % 10 == 0, f"Fee not multiple of 10: {row}"
+    # assert row["documentation"] in VALID_DOCUMENTATION, f"Bad documentation: {row}"
+    # assert row["water_source"] in VALID_WATER_SOURCES, f"Bad water_source: {row}"
+    # assert 4.5 <= row["yield_rate_pct"] <= 11.5, f"Bad yield_rate_pct: {row}"
+    # assert 60 <= row["monthly_fee_brl"] <= 1600, f"Bad monthly_fee_brl: {row}"
+    # assert row["monthly_fee_brl"] % 10 == 0, f"Fee not multiple of 10: {row}"
     a_low, a_high = AREA_BOUNDS[row["prop_type"]]
     assert a_low <= row["area_m2"] <= a_high, f"Bad area_m2: {row}"
-    assert row["sun_position"] in VALID_SUN_POSITIONS, f"Bad sun_position: {row}"
+    # assert row["sun_position"] in VALID_SUN_POSITIONS, f"Bad sun_position: {row}"
 
 
 def _parse_and_validate_row(raw: dict[str, Any], idx: int) -> dict[str, Any]:
@@ -790,27 +800,27 @@ def _parse_and_validate_row(raw: dict[str, Any], idx: int) -> dict[str, Any]:
         assert POSITIVE_INT_RE.fullmatch(raw[int_col]), (
             f"{int_col} not a canonical integer at row {idx}: {raw[int_col]!r}"
         )
-    assert ONE_DECIMAL_RE.fullmatch(raw["dist_beach_km"]), (
-        f"dist_beach_km not 1 decimal at row {idx}: {raw['dist_beach_km']!r}"
-    )
-    assert ONE_DECIMAL_RE.fullmatch(raw["yield_rate_pct"]), (
-        f"yield_rate_pct not 1 decimal at row {idx}: {raw['yield_rate_pct']!r}"
-    )
+    # assert ONE_DECIMAL_RE.fullmatch(raw["dist_beach_km"]), (
+    #     f"dist_beach_km not 1 decimal at row {idx}: {raw['dist_beach_km']!r}"
+    # )
+    # assert ONE_DECIMAL_RE.fullmatch(raw["yield_rate_pct"]), (
+    #     f"yield_rate_pct not 1 decimal at row {idx}: {raw['yield_rate_pct']!r}"
+    # )
 
     row: dict[str, Any] = {
         "prop_id": raw["prop_id"],
-        "builder": raw["builder"],
+        # "builder": raw["builder"],
         "title": raw["title"],
         "prop_type": raw["prop_type"],
-        "year_delivery": int(raw["year_delivery"]),
-        "dist_beach_km": float(raw["dist_beach_km"]),
+        # "year_delivery": int(raw["year_delivery"]),
+        # "dist_beach_km": float(raw["dist_beach_km"]),
         "price_brl": int(raw["price_brl"]),
-        "documentation": raw["documentation"],
-        "water_source": raw["water_source"],
-        "yield_rate_pct": float(raw["yield_rate_pct"]),
-        "monthly_fee_brl": int(raw["monthly_fee_brl"]),
+        # "documentation": raw["documentation"],
+        # "water_source": raw["water_source"],
+        # "yield_rate_pct": float(raw["yield_rate_pct"]),
+        # "monthly_fee_brl": int(raw["monthly_fee_brl"]),
         "area_m2": int(raw["area_m2"]),
-        "sun_position": raw["sun_position"],
+        # "sun_position": raw["sun_position"],
         "city": raw["city"],
     }
 
@@ -820,7 +830,7 @@ def _parse_and_validate_row(raw: dict[str, Any], idx: int) -> dict[str, Any]:
 
 
 def _validate_dataset_invariants(rows: list[dict[str, Any]]) -> None:
-    """Validate dataset-level counts, title coherence, unique sort keys, and anchors."""
+    """Validate dataset-level counts, title coherence, and anchors."""
     assert len(rows) == TOTAL_ROWS, f"Expected {TOTAL_ROWS} rows, got {len(rows)}"
     distinct_titles = {r["title"] for r in rows}
     assert len(distinct_titles) == 24, (
@@ -836,36 +846,36 @@ def _validate_dataset_invariants(rows: list[dict[str, Any]]) -> None:
         f"Unexpected terreno count: {pt_counts['terreno']}"
     )
 
-    doc_counts = Counter(r["documentation"] for r in rows)
-    escriturado_ratio = doc_counts["escriturado"] / len(rows)
-    assert 0.70 <= escriturado_ratio <= 0.80, (
-        f"Unexpected escriturado ratio: {escriturado_ratio:.3f}"
-    )
+    # doc_counts = Counter(r["documentation"] for r in rows)
+    # escriturado_ratio = doc_counts["escriturado"] / len(rows)
+    # assert 0.70 <= escriturado_ratio <= 0.80, (
+    #     f"Unexpected escriturado ratio: {escriturado_ratio:.3f}"
+    # )
 
-    assert {r["builder"] for r in rows} == set(VALID_BUILDERS), "Missing expected builders"
+    # assert {r["builder"] for r in rows} == set(VALID_BUILDERS), "Missing expected builders"
     assert {r["city"] for r in rows} == set(VALID_CITIES), "Missing expected cities"
-    assert {r["water_source"] for r in rows} == set(VALID_WATER_SOURCES), (
-        "Missing expected water sources"
-    )
-    assert {r["sun_position"] for r in rows} == set(VALID_SUN_POSITIONS), (
-        "Missing expected sun positions"
-    )
+    # assert {r["water_source"] for r in rows} == set(VALID_WATER_SOURCES), (
+    #     "Missing expected water sources"
+    # )
+    # assert {r["sun_position"] for r in rows} == set(VALID_SUN_POSITIONS), (
+    #     "Missing expected sun positions"
+    # )
 
-    title_signatures: dict[str, tuple[str, str]] = {}
+    title_signatures: dict[str, str] = {}
     for r in rows:
-        sig = (r["prop_type"], r["builder"])
+        sig = str(r["prop_type"])
         if r["title"] in title_signatures:
             assert title_signatures[r["title"]] == sig, (
-                f"Inconsistent (prop_type, builder) for title {r['title']}: "
+                f"Inconsistent prop_type for title {r['title']}: "
                 f"{title_signatures[r['title']]} vs {sig}"
             )
         else:
             title_signatures[r["title"]] = sig
 
-    sort_keys = [(r["year_delivery"], r["dist_beach_km"]) for r in rows]
-    assert len(sort_keys) == len(set(sort_keys)), (
-        "Duplicate (year_delivery, dist_beach_km) sort keys found"
-    )
+    # sort_keys = [(r["year_delivery"], r["dist_beach_km"]) for r in rows]
+    # assert len(sort_keys) == len(set(sort_keys)), (
+    #     "Duplicate (year_delivery, dist_beach_km) sort keys found"
+    # )
 
     by_id = {r["prop_id"]: r for r in rows}
     for pid, expected in ANCHOR_ROWS.items():
@@ -901,30 +911,17 @@ def _print_ranked_rows(heading: str, rows: list[dict[str, Any]], limit: int) -> 
     print(f"\n{heading}:")
     for rank, r in enumerate(rows[:limit], start=1):
         print(
-            f"  #{rank}: {r['prop_id']} | {r['title']} | builder={r['builder']} | "
-            f"year={r['year_delivery']} | dist={r['dist_beach_km']:.1f}km | "
+            f"  #{rank}: {r['prop_id']} | {r['title']} | "
             f"price=R${r['price_brl']} | area={r['area_m2']}m2 | {r['city']}"
         )
 
 
 def _verify_anchor_group_casas(rows: list[dict[str, Any]]) -> None:
     """Verify and print Anchor Group 1 (top houses up to R$ 350,000)."""
-    casas_350k = sorted(
-        [r for r in rows if r["prop_type"] == "casa" and r["price_brl"] <= 350_000],
-        key=lambda r: (-r["year_delivery"], r["dist_beach_km"]),
-    )
+    casas_350k = [r for r in rows if r["prop_type"] == "casa" and r["price_brl"] <= 350_000]
     assert len(casas_350k) >= 3, f"Expected >= 3 casas <= 350k, got {len(casas_350k)}"
-    assert all(r["year_delivery"] <= 2024 for r in casas_350k), (
-        "Found casa <= 350k newer than 2024"
-    )
-    assert [r["prop_id"] for r in casas_350k[:3]] == ["p082", "p081", "p109"], (
-        f"Unexpected top 3 casas <= 350k: {[r['prop_id'] for r in casas_350k[:5]]}"
-    )
-    assert all(r["dist_beach_km"] > 11.0 for r in casas_350k[3:] if r["year_delivery"] == 2024), (
-        "Non-anchor 2024 casa <= 350k closer than p109"
-    )
     _print_ranked_rows(
-        "Top 5 houses (prop_type == 'casa' & price_brl <= 350000)",
+        "Houses (prop_type == 'casa' & price_brl <= 350000)",
         casas_350k,
         limit=5,
     )
@@ -932,44 +929,24 @@ def _verify_anchor_group_casas(rows: list[dict[str, Any]]) -> None:
 
 def _verify_anchor_group_terrenos(rows: list[dict[str, Any]]) -> None:
     """Verify and print Anchor Group 2 (top terrains up to R$ 150,000)."""
-    terrenos_150k = sorted(
-        [r for r in rows if r["prop_type"] == "terreno" and r["price_brl"] <= 150_000],
-        key=lambda r: (-r["year_delivery"], r["dist_beach_km"]),
-    )
+    terrenos_150k = [r for r in rows if r["prop_type"] == "terreno" and r["price_brl"] <= 150_000]
     assert len(terrenos_150k) >= 2, (
         f"Expected >= 2 terrenos <= 150k, got {len(terrenos_150k)}"
     )
-    assert terrenos_150k[0]["prop_id"] == "p199", (
-        f"Unexpected #1 terreno <= 150k: {terrenos_150k[0]['prop_id']}"
-    )
-    assert terrenos_150k[1]["prop_id"] == "p204", (
-        f"Unexpected #2 terreno <= 150k: {terrenos_150k[1]['prop_id']}"
-    )
-    assert all(r["year_delivery"] <= 2024 for r in terrenos_150k[2:]), (
-        "Found non-anchor terreno <= 150k with year_delivery >= 2025"
-    )
     _print_ranked_rows(
-        "Top 3 terrains (prop_type == 'terreno' & price_brl <= 150000)",
+        "Terrains (prop_type == 'terreno' & price_brl <= 150000)",
         terrenos_150k,
         limit=3,
     )
 
 
 def _verify_pandas_crosscheck(csv_path: Path) -> None:
-    """Cross-check CSV schema and anchor ordering with pandas when installed."""
+    """Cross-check CSV schema with pandas when installed."""
     if pd is None:
         return
     df = pd.read_csv(csv_path)
     assert len(df) == TOTAL_ROWS
     assert list(df.columns) == COLUMNS
-    top_casas = df[
-        (df["prop_type"] == "casa") & (df["price_brl"] <= 350_000)
-    ].sort_values(by=["year_delivery", "dist_beach_km"], ascending=[False, True])
-    assert top_casas["prop_id"].head(3).tolist() == ["p082", "p081", "p109"]
-    top_terrenos = df[
-        (df["prop_type"] == "terreno") & (df["price_brl"] <= 150_000)
-    ].sort_values(by=["year_delivery", "dist_beach_km"], ascending=[False, True])
-    assert top_terrenos["prop_id"].head(2).tolist() == ["p199", "p204"]
 
 
 def verify_and_report(csv_path: Path) -> None:
@@ -982,8 +959,8 @@ def verify_and_report(csv_path: Path) -> None:
     print(f"Columns ({len(COLUMNS)}): {COLUMNS}")
     print(f"Distinct titles: {len({r['title'] for r in rows})}")
     print(f"prop_type counts: {dict(Counter(r['prop_type'] for r in rows))}")
-    print(f"documentation counts: {dict(Counter(r['documentation'] for r in rows))}")
-    print(f"builder counts: {dict(Counter(r['builder'] for r in rows))}")
+    # print(f"documentation counts: {dict(Counter(r['documentation'] for r in rows))}")
+    # print(f"builder counts: {dict(Counter(r['builder'] for r in rows))}")
     print(f"city counts: {dict(Counter(r['city'] for r in rows))}")
 
     _verify_anchor_group_casas(rows)
@@ -994,8 +971,8 @@ def verify_and_report(csv_path: Path) -> None:
 
 
 def main() -> None:
-    """Generate ``data/properties.csv`` and run full verification reporting."""
-    output_path = Path(__file__).resolve().parent / "properties.csv"
+    """Generate ``data/synthetic_properties.csv`` and run full verification reporting."""
+    output_path = Path(__file__).resolve().parent / "synthetic_properties.csv"
     rows = generate_rows()
     write_csv(rows, output_path)
     verify_and_report(output_path)

@@ -1,0 +1,361 @@
+prop_id,title,prop_type,price_brl,area_m2,city
+p001,Solar Potengi,apartamento,405500,75,Natal
+p002,Solar Potengi,apartamento,429500,99,Natal
+p003,Solar Potengi,apartamento,420000,92,Natal
+p004,Solar Potengi,apartamento,287500,72,Natal
+p005,Solar Potengi,apartamento,434500,105,Natal
+p006,Solar Potengi,apartamento,600500,145,Natal
+p007,Solar Potengi,apartamento,496000,118,Natal
+p008,Solar Potengi,apartamento,449000,92,Natal
+p009,Solar Potengi,apartamento,357000,76,Natal
+p010,Solar Potengi,apartamento,572500,130,Natal
+p011,Solar Potengi,apartamento,421000,89,Natal
+p012,Solar Potengi,apartamento,589000,131,Natal
+p013,Solar Potengi,apartamento,486000,115,Natal
+p014,Solar Potengi,apartamento,461500,85,Natal
+p015,Solar Potengi,apartamento,364500,72,Natal
+p016,Mirante de Ponta Negra,apartamento,351000,105,Natal
+p017,Mirante de Ponta Negra,apartamento,643500,162,Natal
+p018,Mirante de Ponta Negra,apartamento,660500,151,Natal
+p019,Mirante de Ponta Negra,apartamento,367500,102,Natal
+p020,Mirante de Ponta Negra,apartamento,686000,168,Natal
+p021,Mirante de Ponta Negra,apartamento,450500,101,Natal
+p022,Mirante de Ponta Negra,apartamento,486500,112,Natal
+p023,Mirante de Ponta Negra,apartamento,515000,164,Natal
+p024,Mirante de Ponta Negra,apartamento,434500,143,Natal
+p025,Mirante de Ponta Negra,apartamento,522500,157,Natal
+p026,Mirante de Ponta Negra,apartamento,570500,162,Natal
+p027,Mirante de Ponta Negra,apartamento,622500,167,Natal
+p028,Mirante de Ponta Negra,apartamento,541500,135,Natal
+p029,Residencial Via Costeira,apartamento,636500,177,Natal
+p030,Residencial Via Costeira,apartamento,750000,174,Natal
+p031,Residencial Via Costeira,apartamento,477000,122,Natal
+p032,Residencial Via Costeira,apartamento,579500,138,Natal
+p033,Residencial Via Costeira,apartamento,482000,138,Natal
+p034,Residencial Via Costeira,apartamento,689500,152,Natal
+p035,Residencial Via Costeira,apartamento,598000,136,Natal
+p036,Residencial Via Costeira,apartamento,506000,127,Natal
+p037,Residencial Via Costeira,apartamento,450000,118,Natal
+p038,Residencial Via Costeira,apartamento,428500,108,Natal
+p039,Residencial Via Costeira,apartamento,647500,173,Natal
+p040,Residencial Via Costeira,apartamento,545500,145,Natal
+p041,Recanto de Pium,casa,577500,247,Nísia Floresta
+p042,Recanto de Pium,casa,324500,141,Parnamirim
+p043,Recanto de Pium,casa,363500,154,Nísia Floresta
+p044,Recanto de Pium,casa,535500,223,Parnamirim
+p045,Recanto de Pium,casa,341000,195,Nísia Floresta
+p046,Recanto de Pium,casa,303000,128,Parnamirim
+p047,Recanto de Pium,casa,327000,137,Parnamirim
+p048,Recanto de Pium,casa,566000,228,Parnamirim
+p049,Recanto de Pium,casa,518500,250,Parnamirim
+p050,Recanto de Pium,casa,415500,171,Parnamirim
+p051,Recanto de Pium,casa,362500,149,Parnamirim
+p052,Recanto de Pium,casa,289500,115,Nísia Floresta
+p053,Recanto de Pium,casa,524500,249,Nísia Floresta
+p054,Recanto de Pium,casa,429000,229,Nísia Floresta
+p055,Reserva Nísia,casa,220000,118,São José de Mipibu
+p056,Reserva Nísia,casa,265500,105,Nísia Floresta
+p057,Reserva Nísia,casa,240000,126,Parnamirim
+p058,Reserva Nísia,casa,286500,142,Nísia Floresta
+p059,Reserva Nísia,casa,289000,168,São José de Mipibu
+p060,Reserva Nísia,casa,210000,110,Macaíba
+p061,Reserva Nísia,casa,348000,135,Macaíba
+p062,Reserva Nísia,casa,227500,108,Parnamirim
+p063,Reserva Nísia,casa,387000,163,Nísia Floresta
+p064,Reserva Nísia,casa,382500,191,Macaíba
+p065,Reserva Nísia,casa,297000,130,Nísia Floresta
+p066,Reserva Nísia,casa,454500,183,Parnamirim
+p067,Reserva Nísia,casa,341000,155,Macaíba
+p068,Reserva Nísia,casa,272500,119,Nísia Floresta
+p069,Reserva Nísia,casa,333500,162,São José de Mipibu
+p070,Bosque das Dunas,casa,289500,133,Natal
+p071,Bosque das Dunas,casa,343500,207,Parnamirim
+p072,Bosque das Dunas,casa,281000,158,Parnamirim
+p073,Bosque das Dunas,casa,505000,253,Parnamirim
+p074,Bosque das Dunas,casa,386500,173,Parnamirim
+p075,Bosque das Dunas,casa,375000,194,Parnamirim
+p076,Bosque das Dunas,casa,351000,170,Parnamirim
+p077,Bosque das Dunas,casa,529000,265,Parnamirim
+p078,Bosque das Dunas,casa,554000,230,Parnamirim
+p079,Bosque das Dunas,casa,430000,188,Extremoz
+p080,Bosque das Dunas,casa,459000,245,Parnamirim
+p081,Bosque das Dunas,casa,315000,180,Natal
+p082,Bosque das Dunas,casa,340000,180,Parnamirim
+p083,Bosque das Dunas,casa,535500,222,Parnamirim
+p084,Bosque das Dunas,casa,599000,258,Natal
+p085,Jardim das Mangueiras,casa,373500,178,Parnamirim
+p086,Jardim das Mangueiras,casa,438500,209,Natal
+p087,Jardim das Mangueiras,casa,616500,285,Natal
+p088,Jardim das Mangueiras,casa,221000,139,Macaíba
+p089,Jardim das Mangueiras,casa,554500,255,Natal
+p090,Jardim das Mangueiras,casa,331500,187,Parnamirim
+p091,Jardim das Mangueiras,casa,343000,202,Mossoró
+p092,Jardim das Mangueiras,casa,326500,130,Parnamirim
+p093,Jardim das Mangueiras,casa,323500,172,Macaíba
+p094,Jardim das Mangueiras,casa,523500,299,Macaíba
+p095,Jardim das Mangueiras,casa,258500,130,Parnamirim
+p096,Jardim das Mangueiras,casa,628000,240,Natal
+p097,Jardim das Mangueiras,casa,250000,141,Mossoró
+p098,Jardim das Mangueiras,casa,438000,218,Natal
+p099,Jardim das Mangueiras,casa,203000,132,Mossoró
+p100,Vila Atlântica,casa,300500,132,Nísia Floresta
+p101,Vila Atlântica,casa,387500,184,Nísia Floresta
+p102,Vila Atlântica,casa,304000,128,Natal
+p103,Vila Atlântica,casa,412000,189,Parnamirim
+p104,Vila Atlântica,casa,289500,156,Extremoz
+p105,Vila Atlântica,casa,547500,257,Nísia Floresta
+p106,Vila Atlântica,casa,232500,126,Nísia Floresta
+p107,Vila Atlântica,casa,243000,129,Nísia Floresta
+p108,Vila Atlântica,casa,670000,258,Natal
+p109,Vila Atlântica,casa,345000,155,Nísia Floresta
+p110,Vila Atlântica,casa,487000,214,Nísia Floresta
+p111,Vila Atlântica,casa,513500,221,Parnamirim
+p112,Vila Atlântica,casa,378500,205,Nísia Floresta
+p113,Vila Atlântica,casa,378500,157,Nísia Floresta
+p114,Vila Atlântica,casa,231000,123,Nísia Floresta
+p115,Condomínio Morada do Sol,casa,576500,251,Natal
+p116,Condomínio Morada do Sol,casa,457500,263,Macaíba
+p117,Condomínio Morada do Sol,casa,244500,148,Macaíba
+p118,Condomínio Morada do Sol,casa,386000,205,Mossoró
+p119,Condomínio Morada do Sol,casa,416000,240,Macaíba
+p120,Condomínio Morada do Sol,casa,242000,169,Mossoró
+p121,Condomínio Morada do Sol,casa,438000,214,Mossoró
+p122,Condomínio Morada do Sol,casa,449500,220,Natal
+p123,Condomínio Morada do Sol,casa,415500,276,Macaíba
+p124,Condomínio Morada do Sol,casa,510500,307,Macaíba
+p125,Condomínio Morada do Sol,casa,313500,147,Natal
+p126,Condomínio Morada do Sol,casa,374500,213,Mossoró
+p127,Condomínio Morada do Sol,casa,487000,285,Mossoró
+p128,Condomínio Morada do Sol,casa,348000,208,Mossoró
+p129,Condomínio Morada do Sol,casa,237000,160,Mossoró
+p130,Vilas de Extremoz,casa,353000,145,Extremoz
+p131,Vilas de Extremoz,casa,254500,109,Extremoz
+p132,Vilas de Extremoz,casa,279500,126,Extremoz
+p133,Vilas de Extremoz,casa,262500,109,Extremoz
+p134,Vilas de Extremoz,casa,263000,120,Extremoz
+p135,Vilas de Extremoz,casa,319000,152,Extremoz
+p136,Vilas de Extremoz,casa,268000,130,Extremoz
+p137,Vilas de Extremoz,casa,341500,159,Extremoz
+p138,Vilas de Extremoz,casa,341000,155,Extremoz
+p139,Vilas de Extremoz,casa,267000,126,Extremoz
+p140,Vilas de Extremoz,casa,412500,175,Extremoz
+p141,Vilas de Extremoz,casa,260000,114,Extremoz
+p142,Vilas de Extremoz,casa,239500,105,Extremoz
+p143,Vilas de Extremoz,casa,239500,106,Extremoz
+p144,Vilas de Extremoz,casa,202500,104,Extremoz
+p145,Alphaville Potiguar,casa,435000,233,Mossoró
+p146,Alphaville Potiguar,casa,849000,373,Parnamirim
+p147,Alphaville Potiguar,casa,483000,320,Mossoró
+p148,Alphaville Potiguar,casa,596500,409,Mossoró
+p149,Alphaville Potiguar,casa,587000,417,Mossoró
+p150,Alphaville Potiguar,casa,603500,315,Natal
+p151,Alphaville Potiguar,casa,599000,225,Natal
+p152,Alphaville Potiguar,casa,693000,314,Parnamirim
+p153,Alphaville Potiguar,casa,555000,273,Natal
+p154,Alphaville Potiguar,casa,480000,204,Parnamirim
+p155,Alphaville Potiguar,casa,462500,221,Parnamirim
+p156,Alphaville Potiguar,casa,641500,362,Parnamirim
+p157,Alphaville Potiguar,casa,668000,388,Mossoró
+p158,Alphaville Potiguar,casa,448500,246,Parnamirim
+p159,Alphaville Potiguar,casa,463000,331,Mossoró
+p160,Portal de Parnamirim,casa,329000,137,Parnamirim
+p161,Portal de Parnamirim,casa,300000,158,Parnamirim
+p162,Portal de Parnamirim,casa,286500,136,Parnamirim
+p163,Portal de Parnamirim,casa,283500,140,Parnamirim
+p164,Portal de Parnamirim,casa,317000,181,Parnamirim
+p165,Portal de Parnamirim,casa,370000,144,Parnamirim
+p166,Portal de Parnamirim,casa,363500,135,Parnamirim
+p167,Portal de Parnamirim,casa,415500,185,Parnamirim
+p168,Portal de Parnamirim,casa,397000,186,Parnamirim
+p169,Portal de Parnamirim,casa,286000,133,Parnamirim
+p170,Portal de Parnamirim,casa,299500,158,Parnamirim
+p171,Portal de Parnamirim,casa,463500,186,Parnamirim
+p172,Portal de Parnamirim,casa,393000,161,Parnamirim
+p173,Portal de Parnamirim,casa,265000,110,Parnamirim
+p174,Portal de Parnamirim,casa,292500,127,Parnamirim
+p175,Residencial Lagoa Azul,casa,243000,154,Macaíba
+p176,Residencial Lagoa Azul,casa,566500,279,Nísia Floresta
+p177,Residencial Lagoa Azul,casa,413500,192,Extremoz
+p178,Residencial Lagoa Azul,casa,350000,202,São José de Mipibu
+p179,Residencial Lagoa Azul,casa,231000,142,São José de Mipibu
+p180,Residencial Lagoa Azul,casa,455500,336,São José de Mipibu
+p181,Residencial Lagoa Azul,casa,365000,242,Mossoró
+p182,Residencial Lagoa Azul,casa,711000,330,Extremoz
+p183,Residencial Lagoa Azul,casa,219000,126,São José de Mipibu
+p184,Residencial Lagoa Azul,casa,545500,274,Mossoró
+p185,Residencial Lagoa Azul,casa,602500,269,Nísia Floresta
+p186,Residencial Lagoa Azul,casa,231000,150,Mossoró
+p187,Residencial Lagoa Azul,casa,439500,240,São José de Mipibu
+p188,Residencial Lagoa Azul,casa,683000,338,Mossoró
+p189,Residencial Lagoa Azul,casa,479000,237,Nísia Floresta
+p190,Residencial Lagoa Azul,casa,297000,163,Extremoz
+p191,Quintas de Mipibu,terreno,110500,343,Nísia Floresta
+p192,Quintas de Mipibu,terreno,291000,938,São José de Mipibu
+p193,Quintas de Mipibu,terreno,125500,492,São José de Mipibu
+p194,Quintas de Mipibu,terreno,211000,684,Nísia Floresta
+p195,Quintas de Mipibu,terreno,189500,770,São José de Mipibu
+p196,Quintas de Mipibu,terreno,177000,823,São José de Mipibu
+p197,Quintas de Mipibu,terreno,113500,441,São José de Mipibu
+p198,Quintas de Mipibu,terreno,103500,371,São José de Mipibu
+p199,Quintas de Mipibu,terreno,145000,450,São José de Mipibu
+p200,Quintas de Mipibu,terreno,187500,686,São José de Mipibu
+p201,Quintas de Mipibu,terreno,185000,623,Nísia Floresta
+p202,Quintas de Mipibu,terreno,171500,618,Nísia Floresta
+p203,Loteamento Brisa do Sul,terreno,189000,655,Extremoz
+p204,Loteamento Brisa do Sul,terreno,138000,600,Extremoz
+p205,Loteamento Brisa do Sul,terreno,117000,481,Extremoz
+p206,Loteamento Brisa do Sul,terreno,110000,361,Extremoz
+p207,Loteamento Brisa do Sul,terreno,152500,542,Nísia Floresta
+p208,Loteamento Brisa do Sul,terreno,208500,722,Parnamirim
+p209,Loteamento Brisa do Sul,terreno,138500,610,Parnamirim
+p210,Loteamento Brisa do Sul,terreno,158500,692,Nísia Floresta
+p211,Loteamento Brisa do Sul,terreno,212500,817,Extremoz
+p212,Loteamento Brisa do Sul,terreno,180500,673,Extremoz
+p213,Loteamento Brisa do Sul,terreno,98500,378,Extremoz
+p214,Loteamento Brisa do Sul,terreno,156500,596,Parnamirim
+p215,Loteamento Brisa do Sul,terreno,232500,797,Extremoz
+p216,Loteamento Brisa do Sul,terreno,179500,669,Extremoz
+p217,Loteamento Brisa do Sul,terreno,81000,289,Parnamirim
+p218,Loteamento Mar do Norte,terreno,179000,556,Extremoz
+p219,Loteamento Mar do Norte,terreno,94000,292,Extremoz
+p220,Loteamento Mar do Norte,terreno,248500,620,Nísia Floresta
+p221,Loteamento Mar do Norte,terreno,114000,377,Extremoz
+p222,Loteamento Mar do Norte,terreno,282500,690,Natal
+p223,Loteamento Mar do Norte,terreno,152500,452,Extremoz
+p224,Loteamento Mar do Norte,terreno,235000,720,Natal
+p225,Loteamento Mar do Norte,terreno,210500,545,Natal
+p226,Loteamento Mar do Norte,terreno,206500,550,Extremoz
+p227,Loteamento Mar do Norte,terreno,160500,430,Extremoz
+p228,Loteamento Mar do Norte,terreno,293000,732,Natal
+p229,Loteamento Mar do Norte,terreno,124500,290,Natal
+p230,Loteamento Mar do Norte,terreno,126500,384,Extremoz
+p231,Loteamento Mar do Norte,terreno,278500,774,Extremoz
+p232,Loteamento Mar do Norte,terreno,123000,413,Natal
+p233,Terras de São José,terreno,191500,675,São José de Mipibu
+p234,Terras de São José,terreno,94500,355,Macaíba
+p235,Terras de São José,terreno,177500,839,Macaíba
+p236,Terras de São José,terreno,199000,547,Nísia Floresta
+p237,Terras de São José,terreno,160500,667,Macaíba
+p238,Terras de São José,terreno,80500,340,Macaíba
+p239,Terras de São José,terreno,125500,594,São José de Mipibu
+p240,Terras de São José,terreno,136000,649,São José de Mipibu
+p241,Terras de São José,terreno,180000,658,São José de Mipibu
+p242,Terras de São José,terreno,234000,830,São José de Mipibu
+p243,Terras de São José,terreno,147500,683,São José de Mipibu
+p244,Terras de São José,terreno,135000,535,São José de Mipibu
+p245,Terras de São José,terreno,282000,900,Nísia Floresta
+p246,Terras de São José,terreno,149000,597,Macaíba
+p247,Terras de São José,terreno,122500,581,São José de Mipibu
+p248,Loteamento Sol Nascente,terreno,228500,622,Natal
+p249,Loteamento Sol Nascente,terreno,145500,434,Natal
+p250,Loteamento Sol Nascente,terreno,194000,478,Natal
+p251,Loteamento Sol Nascente,terreno,189000,648,Macaíba
+p252,Loteamento Sol Nascente,terreno,157000,583,Parnamirim
+p253,Loteamento Sol Nascente,terreno,75500,230,Natal
+p254,Loteamento Sol Nascente,terreno,196000,732,Mossoró
+p255,Loteamento Sol Nascente,terreno,181000,539,Parnamirim
+p256,Loteamento Sol Nascente,terreno,105000,337,Natal
+p257,Loteamento Sol Nascente,terreno,226500,656,Parnamirim
+p258,Loteamento Sol Nascente,terreno,234500,659,Parnamirim
+p259,Loteamento Sol Nascente,terreno,229000,594,Natal
+p260,Loteamento Sol Nascente,terreno,124500,336,Natal
+p261,Loteamento Sol Nascente,terreno,130500,540,Mossoró
+p262,Chácaras do Potengi,terreno,212500,948,São José de Mipibu
+p263,Chácaras do Potengi,terreno,208000,1084,Extremoz
+p264,Chácaras do Potengi,terreno,185500,953,São José de Mipibu
+p265,Chácaras do Potengi,terreno,129000,745,Macaíba
+p266,Chácaras do Potengi,terreno,172500,825,São José de Mipibu
+p267,Chácaras do Potengi,terreno,177000,754,Extremoz
+p268,Chácaras do Potengi,terreno,281000,1052,Extremoz
+p269,Chácaras do Potengi,terreno,172000,809,Macaíba
+p270,Chácaras do Potengi,terreno,254000,1145,Extremoz
+p271,Chácaras do Potengi,terreno,114500,599,Macaíba
+p272,Chácaras do Potengi,terreno,147000,545,Extremoz
+p273,Chácaras do Potengi,terreno,220500,1200,Extremoz
+p274,Chácaras do Potengi,terreno,145000,666,São José de Mipibu
+p275,Chácaras do Potengi,terreno,100500,499,São José de Mipibu
+p276,Loteamento Costa Branca,terreno,100500,442,Mossoró
+p277,Loteamento Costa Branca,terreno,99000,404,Mossoró
+p278,Loteamento Costa Branca,terreno,113000,370,Mossoró
+p279,Loteamento Costa Branca,terreno,83500,307,Mossoró
+p280,Loteamento Costa Branca,terreno,93500,371,Mossoró
+p281,Loteamento Costa Branca,terreno,172500,688,Mossoró
+p282,Loteamento Costa Branca,terreno,160500,518,Mossoró
+p283,Loteamento Costa Branca,terreno,129500,543,Mossoró
+p284,Loteamento Costa Branca,terreno,96500,350,Mossoró
+p285,Loteamento Costa Branca,terreno,232500,817,Mossoró
+p286,Loteamento Costa Branca,terreno,65000,275,Mossoró
+p287,Loteamento Costa Branca,terreno,245500,785,Mossoró
+p288,Loteamento Costa Branca,terreno,66000,302,Mossoró
+p289,Loteamento Costa Branca,terreno,125000,551,Mossoró
+p290,Loteamento Costa Branca,terreno,117000,500,Mossoró
+p291,Torre do Tirol,apartamento,551000,152,Natal
+p292,Torre do Tirol,apartamento,436500,105,Natal
+p293,Torre do Tirol,apartamento,331500,90,Natal
+p294,Torre do Tirol,apartamento,441000,113,Natal
+p295,Torre do Tirol,apartamento,407000,113,Natal
+p296,Torre do Tirol,apartamento,335500,86,Natal
+p297,Torre do Tirol,apartamento,446000,110,Natal
+p298,Torre do Tirol,apartamento,313500,86,Natal
+p299,Torre do Tirol,apartamento,330500,92,Natal
+p300,Torre do Tirol,apartamento,429000,95,Natal
+p301,Torre do Tirol,apartamento,414500,118,Natal
+p302,Torre do Tirol,apartamento,583000,159,Natal
+p303,Torre do Tirol,apartamento,426500,118,Natal
+p304,Torre do Tirol,apartamento,424500,116,Natal
+p305,Torre do Tirol,apartamento,563500,155,Natal
+p306,Torre do Tirol,apartamento,571500,136,Natal
+p307,Torre do Tirol,apartamento,633000,167,Natal
+p308,Torre do Tirol,apartamento,616000,140,Natal
+p309,Edifício Capim Macio,apartamento,319000,69,Natal
+p310,Edifício Capim Macio,apartamento,426500,90,Natal
+p311,Edifício Capim Macio,apartamento,551000,134,Natal
+p312,Edifício Capim Macio,apartamento,354000,100,Natal
+p313,Edifício Capim Macio,apartamento,640500,133,Natal
+p314,Edifício Capim Macio,apartamento,310500,87,Natal
+p315,Edifício Capim Macio,apartamento,409500,89,Natal
+p316,Edifício Capim Macio,apartamento,317000,90,Natal
+p317,Edifício Capim Macio,apartamento,333500,79,Natal
+p318,Edifício Capim Macio,apartamento,331500,85,Natal
+p319,Edifício Capim Macio,apartamento,417000,110,Natal
+p320,Edifício Capim Macio,apartamento,480500,115,Natal
+p321,Edifício Capim Macio,apartamento,299000,74,Natal
+p322,Edifício Capim Macio,apartamento,273000,66,Natal
+p323,Edifício Capim Macio,apartamento,378500,86,Natal
+p324,Edifício Capim Macio,apartamento,404000,85,Natal
+p325,Edifício Capim Macio,apartamento,296000,74,Natal
+p326,Edifício Capim Macio,apartamento,476500,120,Natal
+p327,Parque dos Cajueiros,apartamento,154000,67,Mossoró
+p328,Parque dos Cajueiros,apartamento,273500,88,Macaíba
+p329,Parque dos Cajueiros,apartamento,216000,78,Macaíba
+p330,Parque dos Cajueiros,apartamento,276000,76,Parnamirim
+p331,Parque dos Cajueiros,apartamento,232000,74,Macaíba
+p332,Parque dos Cajueiros,apartamento,175000,63,Mossoró
+p333,Parque dos Cajueiros,apartamento,156000,57,Natal
+p334,Parque dos Cajueiros,apartamento,225000,75,Parnamirim
+p335,Parque dos Cajueiros,apartamento,258500,73,Parnamirim
+p336,Parque dos Cajueiros,apartamento,233000,74,Parnamirim
+p337,Parque dos Cajueiros,apartamento,266000,82,Parnamirim
+p338,Parque dos Cajueiros,apartamento,170000,73,Mossoró
+p339,Parque dos Cajueiros,apartamento,235500,67,Parnamirim
+p340,Parque dos Cajueiros,apartamento,233500,68,Parnamirim
+p341,Parque dos Cajueiros,apartamento,154000,71,Mossoró
+p342,Parque dos Cajueiros,apartamento,187500,60,Parnamirim
+p343,Parque dos Cajueiros,apartamento,223000,88,Mossoró
+p344,Residencial Brisas Potiguares,apartamento,351500,108,Parnamirim
+p345,Residencial Brisas Potiguares,apartamento,268000,96,Mossoró
+p346,Residencial Brisas Potiguares,apartamento,241500,96,Macaíba
+p347,Residencial Brisas Potiguares,apartamento,280500,79,Parnamirim
+p348,Residencial Brisas Potiguares,apartamento,302500,108,Macaíba
+p349,Residencial Brisas Potiguares,apartamento,252500,72,Parnamirim
+p350,Residencial Brisas Potiguares,apartamento,322000,106,Mossoró
+p351,Residencial Brisas Potiguares,apartamento,331500,102,Parnamirim
+p352,Residencial Brisas Potiguares,apartamento,295000,97,Extremoz
+p353,Residencial Brisas Potiguares,apartamento,373000,106,Parnamirim
+p354,Residencial Brisas Potiguares,apartamento,350500,105,Parnamirim
+p355,Residencial Brisas Potiguares,apartamento,254000,85,Extremoz
+p356,Residencial Brisas Potiguares,apartamento,282500,81,Parnamirim
+p357,Residencial Brisas Potiguares,apartamento,235000,75,Macaíba
+p358,Residencial Brisas Potiguares,apartamento,173500,63,Mossoró
+p359,Residencial Brisas Potiguares,apartamento,240000,75,Macaíba
+p360,Residencial Brisas Potiguares,apartamento,330500,92,Parnamirim

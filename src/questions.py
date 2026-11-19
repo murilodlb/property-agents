@@ -1,13 +1,24 @@
 #!/usr/bin/env python3
-"""20-question benchmark suite, dynamic ground truths, and automatic trajectory/regex grader."""
+"""20-question PT-BR benchmark suite, dynamic ground truths, and automatic grader."""
 
 from __future__ import annotations
 
+import math
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any, Literal
 
+import numpy as np
 import pandas as pd
+
+SYSTEM_PROMPT_PTBR = (
+    "Você é um assistente especialista em imóveis no Rio Grande do Norte (Natal e região). "
+    "Responda sempre em português do Brasil (PT-BR), de forma clara e objetiva. "
+    "Consulte sempre as ferramentas do estoque para buscar imóveis reais; nunca invente "
+    "imóveis, preços, bairros ou atributos ausentes. Cite obrigatoriamente o imovel_id "
+    "(ex: r001) de todo imóvel mencionado."
+)
 
 CategoriaType = Literal[
     "busca_com_filtro",
@@ -18,474 +29,790 @@ CategoriaType = Literal[
     "fora_do_escopo",
 ]
 
-PROP_ID_RE = re.compile(r"\bp\d{3}\b", re.IGNORECASE)
+PROP_ID_RE = re.compile(r"\br\d{3,4}\b", re.IGNORECASE)
+
+_ACCENT_CHAR_CLASS: dict[str, str] = {
+    "a": "[aáàâã]",
+    "e": "[eéê]",
+    "i": "[ií]",
+    "o": "[oóôõ]",
+    "u": "[uú]",
+    "c": "[cç]",
+}
 
 
 def _resolve_csv_path() -> Path:
-    """Resolve ``properties.csv`` from the working directory or repository root."""
+    """Resolve ``real_properties.csv`` from working directory or repository root."""
     candidates = [
-        Path("data/properties.csv"),
-        Path("properties.csv"),
-        Path(__file__).resolve().parent.parent / "data" / "properties.csv",
+        Path("data/real_properties.csv"),
+        Path("real_properties.csv"),
+        Path(__file__).resolve().parent.parent / "data" / "real_properties.csv",
     ]
     for path in candidates:
         if path.is_file():
             return path
-    raise FileNotFoundError("Could not locate data/properties.csv or properties.csv")
+    raise FileNotFoundError(
+        "Could not locate data/real_properties.csv or real_properties.csv"
+    )
+
+
+def _normalize_text(value: Any) -> str:
+    """Return lowercase ASCII-folded text without accents or surrounding whitespace."""
+    if value is None:
+        return ""
+    if isinstance(value, float) and math.isnan(value):
+        return ""
+    if pd.isna(value):
+        return ""
+    folded = unicodedata.normalize("NFD", str(value).strip().lower())
+    return "".join(ch for ch in folded if unicodedata.category(ch) != "Mn")
 
 
 def _load_catalog() -> pd.DataFrame:
-    """Load ``properties.csv`` and compute all 9 deterministic valuation columns."""
+    """Load ``real_properties.csv`` and compute the real-data valuation columns."""
     catalog = pd.read_csv(_resolve_csv_path())
-    catalog["price_per_m2"] = (catalog["price_brl"] / catalog["area_m2"]).round(2)
+    for int_col in ("bedrooms", "bathrooms", "garage_spots"):
+        catalog[int_col] = catalog[int_col].astype("Int64")
+    catalog["accepts_financing"] = catalog["accepts_financing"].astype("boolean")
+
+    area_vals = catalog["area_m2"].to_numpy(dtype=float, na_value=np.nan)
+    price_vals = catalog["price_brl"].to_numpy(dtype=float, na_value=np.nan)
+    area_pos = catalog["area_m2"].gt(0).fillna(False).to_numpy(dtype=bool)
+    catalog["price_per_m2"] = np.round(
+        np.divide(price_vals, area_vals, out=np.full_like(price_vals, np.nan), where=area_pos),
+        2,
+    )
     group_ref_m2 = catalog.groupby(["city", "prop_type"])["price_per_m2"].transform("mean")
-    catalog["vp_estimado_brl"] = (catalog["area_m2"] * group_ref_m2).round(2)
-    catalog["p_vp"] = (catalog["price_brl"] / catalog["vp_estimado_brl"]).round(2)
-    catalog["gross_annual_brl"] = (
-        catalog["price_brl"] * (catalog["yield_rate_pct"] / 100.0)
+    type_ref_m2 = catalog.groupby("prop_type")["price_per_m2"].transform("mean")
+    ref_m2_vals = np.where(
+        pd.notna(group_ref_m2),
+        np.asarray(group_ref_m2, dtype=float),
+        np.asarray(type_ref_m2, dtype=float),
+    )
+    catalog["ref_m2_brl"] = np.round(ref_m2_vals, 2)
+    catalog["vp_estimado_brl"] = (catalog["area_m2"] * catalog["ref_m2_brl"]).round(2)
+
+    vp_vals = catalog["vp_estimado_brl"].to_numpy(dtype=float, na_value=np.nan)
+    vp_pos = catalog["vp_estimado_brl"].gt(0).fillna(False).to_numpy(dtype=bool)
+    catalog["p_vp_mercado"] = np.round(
+        np.divide(price_vals, vp_vals, out=np.full_like(price_vals, np.nan), where=vp_pos),
+        2,
+    )
+
+    appr_vals = catalog["appraisal_value_brl"].to_numpy(dtype=float, na_value=np.nan)
+    appr_pos = catalog["appraisal_value_brl"].gt(0).fillna(False).to_numpy(dtype=bool)
+    catalog["p_vp_caixa"] = np.round(
+        np.divide(price_vals, appr_vals, out=np.full_like(price_vals, np.nan), where=appr_pos),
+        2,
+    )
+    catalog["economia_brl"] = (
+        catalog["appraisal_value_brl"] - catalog["price_brl"]
     ).round(2)
-    catalog["annual_fee_brl"] = catalog["monthly_fee_brl"] * 12
-    catalog["noi_annual_brl"] = (
-        catalog["gross_annual_brl"] - catalog["annual_fee_brl"]
-    ).round(2)
-    catalog["net_cap_rate_pct"] = (
-        (catalog["noi_annual_brl"] / catalog["price_brl"]) * 100.0
-    ).round(2)
-    catalog["payback_years"] = (
-        catalog["price_brl"] / catalog["noi_annual_brl"]
-    ).round(2)
+
+    bed_pos = catalog["bedrooms"].gt(0).fillna(False).to_numpy(dtype=bool)
+    bedrooms_float = catalog["bedrooms"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
+    catalog["price_per_bedroom"] = np.round(
+        np.divide(price_vals, bedrooms_float, out=np.full_like(price_vals, np.nan), where=bed_pos),
+        2,
+    )
+    catalog["entrada_20_pct_brl"] = (catalog["price_brl"] * 0.20).round(2)
+    catalog["itbi_registro_est_brl"] = (catalog["price_brl"] * 0.045).round(2)
     return catalog
 
 
 df: pd.DataFrame = _load_catalog()
 _BY_ID: dict[str, dict[str, Any]] = {
-    str(row["prop_id"]): row.to_dict() for _, row in df.iterrows()
+    str(row["prop_id"]).lower(): row.to_dict() for _, row in df.iterrows()
 }
 
 
 def num(x: float | int | str) -> str:
-    """Convert a decimal number into a regex accepting '.' or ',' as decimal separator."""
-    s = f"{x:g}" if isinstance(x, float) else str(x)
-    return s.replace(".", "[,.]")
+    """Convert a numeric value into a regex accepting '.' or ',' decimal separators."""
+    if isinstance(x, float):
+        text = f"{x:.2f}".rstrip("0").rstrip(".")
+    else:
+        text = str(x).strip()
+    return text.replace(".", "[,.]")
 
 
-def _row(prop_id: str) -> dict[str, Any]:
-    """Fetch a single property dict by ``prop_id``."""
-    return _BY_ID[prop_id]
+def _group_thousands_regex(int_val: int) -> str:
+    """Build a regex matching an integer with optional '.', ',', or '_' thousands separators."""
+    raw = str(int_val)
+    if len(raw) <= 3:
+        return raw
+    groups: list[str] = []
+    while len(raw) > 3:
+        groups.append(raw[-3:])
+        raw = raw[:-3]
+    groups.append(raw)
+    return r"[.,_]?".join(reversed(groups))
+
+
+def brl_re(value: float | int) -> str:
+    """Build a regex matching a currency/area figure in PT-BR, raw, or rounded formats."""
+    abs_val = abs(float(value))
+    int_part = int(abs_val)
+    cents_val = round((abs_val - int_part) * 100)
+    if cents_val == 100:
+        int_part += 1
+        cents_val = 0
+
+    int_pat = _group_thousands_regex(int_part)
+    variants: list[str] = []
+    if cents_val == 0:
+        variants.append(rf"{int_pat}(?:[,.]00?)?")
+        if int_part >= 1000 and int_part % 1000 == 0:
+            variants.append(rf"{int_part // 1000}\s*mil")
+    else:
+        cents_str = f"{cents_val:02d}"
+        cents_pat = f"{cents_str[0]}0?" if cents_str.endswith("0") else cents_str
+        variants.append(rf"{int_pat}[,.]{cents_pat}")
+        rounded_int = round(abs_val)
+        variants.append(_group_thousands_regex(rounded_int))
+        if rounded_int != int_part:
+            variants.append(int_pat)
+
+    return r"\b(?:" + "|".join(dict.fromkeys(variants)) + r")\b"
+
+
+def _fmt_brl(value: float | int) -> str:
+    """Format a number in Brazilian Portuguese style (e.g. '65.270,92')."""
+    num_val = float(value)
+    if num_val.is_integer():
+        return f"{int(num_val):,}".replace(",", ".")
+    return f"{num_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def _accent_flexible_re(text: str) -> str:
+    """Build a regex matching ``text`` regardless of Portuguese diacritics."""
+    folded = _normalize_text(text)
+    parts: list[str] = []
+    for ch in folded:
+        if ch in _ACCENT_CHAR_CLASS:
+            parts.append(_ACCENT_CHAR_CLASS[ch])
+        else:
+            parts.append(re.escape(ch))
+    return "".join(parts)
+
+
+def _pick_distinct_pair(
+    sub: pd.DataFrame,
+    col_a: str,
+    mode_a: Literal["min", "max"],
+    col_b: str,
+    mode_b: Literal["min", "max"],
+) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    """Pick two rows where row A strictly wins ``col_a`` and row B strictly wins ``col_b``."""
+    ordered = sub.sort_values("prop_id", kind="mergesort")
+    for _, row_a in ordered.iterrows():
+        val_a1 = row_a[col_a]
+        val_a2 = row_a[col_b]
+        if bool(pd.isna(val_a1)) or bool(pd.isna(val_a2)):
+            continue
+        cond_a = ordered[col_a] > val_a1 if mode_a == "min" else ordered[col_a] < val_a1
+        cond_b = ordered[col_b] < val_a2 if mode_b == "min" else ordered[col_b] > val_a2
+        cands = ordered.loc[cond_a & cond_b]
+        if not cands.empty:
+            return row_a.to_dict(), cands.iloc[0].to_dict()
+    return None
 
 
 def _build_perguntas() -> list[dict[str, Any]]:
-    """Construct the 20 benchmark questions with dynamic ground-truth strings from ``df``."""
-    # Pre-fetch dynamic rows used across gabaritos
-    p082 = _row("p082")
-    p081 = _row("p081")
-    p109 = _row("p109")
-    p199 = _row("p199")
-    p204 = _row("p204")
-    p322 = _row("p322")
-    p321 = _row("p321")
-    p004 = _row("p004")
-    p166 = _row("p166")
-    p092 = _row("p092")
-    p003 = _row("p003")
-    p061 = _row("p061")
-    p297 = _row("p297")
-    p318 = _row("p318")
-    p206 = _row("p206")
+    """Construct the 20 PT-BR benchmark questions dynamically from ``df``."""
+    city_norm = pd.Series([_normalize_text(v) for v in df["city"]], index=df.index)
+    nb_norm = pd.Series([_normalize_text(v) for v in df["neighborhood"]], index=df.index)
+    source_norm = pd.Series([_normalize_text(v) for v in df["source"]], index=df.index)
+
+    # Q1: Cheapest house in Natal up to R$ 350k
+    q1_sub = df.loc[
+        (df["prop_type"] == "casa")
+        & (city_norm == "natal")
+        & (df["price_brl"] <= 350_000)
+    ].sort_values(["price_brl", "area_m2"], ascending=[True, False], na_position="last")
+    r_q1 = q1_sub.iloc[0].to_dict()
+    r_q1_2 = q1_sub.iloc[1].to_dict()
+
+    # Q2: Largest terrain in RN up to R$ 200k
+    q2_sub = df.loc[
+        (df["prop_type"] == "terreno") & (df["price_brl"] <= 200_000)
+    ].sort_values(["area_m2", "price_brl"], ascending=[False, True], na_position="last")
+    r_q2 = q2_sub.iloc[0].to_dict()
+
+    # Q3: Cheapest apartment in Natal up to R$ 350k with >= 2 bedrooms
+    q3_sub = df.loc[
+        (df["prop_type"] == "apartamento")
+        & (city_norm == "natal")
+        & (df["price_brl"] <= 350_000)
+        & (df["bedrooms"].ge(2).fillna(False))
+    ].sort_values(["price_brl", "area_m2"], ascending=[True, False], na_position="last")
+    r_q3 = q3_sub.iloc[0].to_dict()
+
+    # Q4: Property with highest discount in Parnamirim
+    q4_sub = df.loc[city_norm == "parnamirim"].sort_values(
+        ["discount_pct", "price_brl"], ascending=[False, True], na_position="last"
+    )
+    r_q4 = q4_sub.iloc[0].to_dict()
+
+    # Q5: Natal Caixa listing accepting financing (fallback: any Natal Caixa listing)
+    q5_fin = df.loc[
+        (source_norm == "caixa")
+        & (city_norm == "natal")
+        & (df["accepts_financing"].eq(True).fillna(False))
+    ].sort_values("prop_id", kind="mergesort")
+    if q5_fin.empty:
+        q5_fin = df.loc[(source_norm == "caixa") & (city_norm == "natal")].sort_values(
+            "prop_id", kind="mergesort"
+        )
+    r_q5 = q5_fin.iloc[0].to_dict()
+
+    # Q6: Agency apartment in Ponta Negra with area, bedrooms, bathrooms, and garage
+    q6_sub = df.loc[
+        (source_norm != "caixa")
+        & (df["prop_type"] == "apartamento")
+        & (nb_norm == "ponta negra")
+        & df["area_m2"].notna()
+        & df["bedrooms"].notna()
+        & df["bathrooms"].notna()
+        & df["garage_spots"].notna()
+    ].sort_values("prop_id", kind="mergesort")
+    r_q6 = q6_sub.iloc[0].to_dict()
+
+    # Q7: Caixa house with appraisal, discount, and accepts_financing
+    q7_sub = df.loc[
+        (source_norm == "caixa")
+        & (df["prop_type"] == "casa")
+        & df["appraisal_value_brl"].notna()
+        & df["discount_pct"].notna()
+        & df["accepts_financing"].notna()
+    ].sort_values("prop_id", kind="mergesort")
+    r_q7 = q7_sub.iloc[0].to_dict()
+    q7_fin_regex = r"\bsim\b|aceita" if bool(r_q7["accepts_financing"]) else r"n[ãa]o"
+    q7_fin_label = "Sim" if bool(r_q7["accepts_financing"]) else "Não"
+
+    # Q8: 2 properties where A has lower price_per_m2 and B has larger area_m2
+    q8_sub = df.loc[df["area_m2"].gt(0).fillna(False) & df["price_per_m2"].notna()]
+    pair8 = _pick_distinct_pair(q8_sub, "price_per_m2", "min", "area_m2", "max")
+    assert pair8 is not None, "Não foi possível encontrar par distinto para Q8"
+    a_q8, b_q8 = pair8
+
+    # Q9: 2 Caixa properties where A is cheaper and B has higher discount_pct
+    q9_sub = df.loc[(source_norm == "caixa") & df["discount_pct"].gt(0).fillna(False)]
+    pair9 = _pick_distinct_pair(q9_sub, "price_brl", "min", "discount_pct", "max")
+    assert pair9 is not None, "Não foi possível encontrar par distinto para Q9"
+    a_q9, b_q9 = pair9
+
+    # Q10: 2 cheapest apartments in Ponta Negra (Natal) up to R$ 450k
+    q10_sub = df.loc[
+        (df["prop_type"] == "apartamento")
+        & (city_norm == "natal")
+        & (nb_norm.str.contains("ponta negra", regex=False))
+        & (df["price_brl"] <= 450_000)
+    ].sort_values(["price_brl", "area_m2"], ascending=[True, False], na_position="last")
+    a_q10, b_q10 = q10_sub.iloc[0].to_dict(), q10_sub.iloc[1].to_dict()
+
+    # Q11: 2 houses with highest discount in Parnamirim
+    q11_sub = df.loc[
+        (df["prop_type"] == "casa") & (city_norm == "parnamirim")
+    ].sort_values(["discount_pct", "price_brl"], ascending=[False, True], na_position="last")
+    a_q11, b_q11 = q11_sub.iloc[0].to_dict(), q11_sub.iloc[1].to_dict()
+    q11_area_win = a_q11 if a_q11["area_m2"] >= b_q11["area_m2"] else b_q11
+    q11_ppm_win = a_q11 if a_q11["price_per_m2"] <= b_q11["price_per_m2"] else b_q11
+
+    # Q12: Property with area > 0 and p_vp_mercado < 0.85
+    q12_sub = df.loc[
+        df["area_m2"].gt(0).fillna(False)
+        & df["p_vp_mercado"].gt(0).fillna(False)
+        & df["p_vp_mercado"].lt(0.85).fillna(False)
+    ].sort_values("prop_id", kind="mergesort")
+    r_q12 = q12_sub.iloc[0].to_dict()
+
+    # Q13: Caixa property with discount_pct >= 30
+    q13_sub = df.loc[
+        (source_norm == "caixa")
+        & df["discount_pct"].ge(30).fillna(False)
+        & df["appraisal_value_brl"].gt(0).fillna(False)
+    ].sort_values("prop_id", kind="mergesort")
+    r_q13 = q13_sub.iloc[0].to_dict()
+
+    # Q14: 2 residential properties where A has lower p_vp_mercado and B has lower price_per_bedroom
+    q14_sub = df.loc[
+        df["prop_type"].isin(["casa", "apartamento"])
+        & df["bedrooms"].gt(0).fillna(False)
+        & df["p_vp_mercado"].gt(0).fillna(False)
+        & df["price_per_bedroom"].notna()
+    ]
+    pair14 = _pick_distinct_pair(q14_sub, "p_vp_mercado", "min", "price_per_bedroom", "min")
+    assert pair14 is not None, "Não foi possível encontrar par distinto para Q14"
+    a_q14, b_q14 = pair14
+
+    # Q15: 2 terrains with area_m2 > 0 (prefer distinct winners on price_per_m2 vs p_vp_mercado)
+    q15_sub = df.loc[
+        (df["prop_type"] == "terreno")
+        & df["area_m2"].gt(0).fillna(False)
+        & df["p_vp_mercado"].gt(0).fillna(False)
+    ].sort_values("prop_id", kind="mergesort")
+    pair15 = _pick_distinct_pair(q15_sub, "price_per_m2", "min", "p_vp_mercado", "min")
+    if pair15 is not None:
+        a_q15, b_q15 = pair15
+    else:
+        a_q15, b_q15 = q15_sub.iloc[0].to_dict(), q15_sub.iloc[1].to_dict()
+    q15_ppm_win = a_q15 if a_q15["price_per_m2"] <= b_q15["price_per_m2"] else b_q15
+    q15_pvp_win = a_q15 if a_q15["p_vp_mercado"] <= b_q15["p_vp_mercado"] else b_q15
+
+    # Q16: Financing trap in Ceará-Mirim (fallback: Mossoró)
+    q16_pair: tuple[dict[str, Any], dict[str, Any]] | None = None
+    for city_key in ("ceara-mirim", "mossoro"):
+        sub_city = df.loc[(df["prop_type"] == "casa") & (city_norm == city_key)]
+        no_fin_df = sub_city.loc[sub_city["accepts_financing"].eq(False).fillna(False)].sort_values(
+            "price_brl", kind="mergesort"
+        )
+        yes_fin_df = sub_city.loc[sub_city["accepts_financing"].eq(True).fillna(False)].sort_values(
+            "price_brl", kind="mergesort"
+        )
+        if not no_fin_df.empty and not yes_fin_df.empty:
+            cand_no = no_fin_df.iloc[0].to_dict()
+            cand_yes = yes_fin_df.iloc[0].to_dict()
+            if cand_no["price_brl"] < cand_yes["price_brl"]:
+                q16_pair = (cand_no, cand_yes)
+                break
+    assert q16_pair is not None, "Não foi possível montar pegadinha de financiamento (Q16)"
+    no_fin_16, yes_fin_16 = q16_pair
+
+    # Q17: Caixa ágio trap (price_brl > appraisal_value_brl), preferring Parnamirim
+    q17_all = df.loc[
+        (source_norm == "caixa")
+        & df["appraisal_value_brl"].gt(0).fillna(False)
+        & (df["price_brl"] > df["appraisal_value_brl"])
+        & df["p_vp_caixa"].gt(1.0).fillna(False)
+        & df["neighborhood"].astype(str).str.strip().ne("")
+    ].sort_values("prop_id", kind="mergesort")
+    q17_parn = q17_all.loc[city_norm.loc[q17_all.index] == "parnamirim"]
+    r_q17 = (q17_parn if not q17_parn.empty else q17_all).iloc[0].to_dict()
+
+    # Q19 & Q20 dynamic valid targets
+    a_q19, b_q19 = a_q10, b_q10
+    cheapest_19 = a_q19 if a_q19["price_brl"] <= b_q19["price_brl"] else b_q19
+    r_q20 = r_q5
 
     return [
         {
             "id": 1,
             "categoria": "busca_com_filtro",
-            "q": "Quero uma casa para a família até R$ 350 mil. O que você recomenda?",
-            "ferramenta": "search_properties",
-            "deve": ["p082"],
-            "filtros": {"prop_type": "casa", "max_price": 350000},
+            "q": (
+                "Quero comprar uma casa em Natal de até R$ 350 mil. Quais são as opções "
+                "mais baratas disponíveis no estoque?"
+            ),
+            "ferramenta": "buscar_imoveis",
+            "deve": [r_q1["prop_id"]],
+            "filtros": {"prop_type": "casa", "city": "Natal", "max_price": 350_000},
             "gabarito": (
-                f"Top 3 casas até R$ 350 mil (ordenadas por entrega mais recente e menor "
-                f"distância da praia): 1º {p082['prop_id']} ({p082['title']}, {p082['city']}, "
-                f"ano {p082['year_delivery']}, {p082['dist_beach_km']} km da praia, "
-                f"R$ {p082['price_brl']}, taxa R$ {p082['monthly_fee_brl']}/mês, yield "
-                f"{p082['yield_rate_pct']}%, P/VP {p082['p_vp']}); 2º {p081['prop_id']} "
-                f"({p081['title']}, {p081['city']}, ano {p081['year_delivery']}, "
-                f"{p081['dist_beach_km']} km, R$ {p081['price_brl']}, taxa "
-                f"R$ {p081['monthly_fee_brl']}/mês, yield {p081['yield_rate_pct']}%, P/VP "
-                f"{p081['p_vp']}); 3º {p109['prop_id']} ({p109['title']}, {p109['city']}, "
-                f"ano {p109['year_delivery']}, {p109['dist_beach_km']} km, "
-                f"R$ {p109['price_brl']})."
+                f"A casa mais barata em Natal até R$ 350 mil é a {r_q1['prop_id']} "
+                f"({r_q1['title']}, bairro {r_q1['neighborhood']}, fonte {r_q1['source']}), "
+                f"por R$ {_fmt_brl(r_q1['price_brl'])}, {r_q1['area_m2']} m² e P/VP de mercado "
+                f"{r_q1['p_vp_mercado']}; em 2º lugar aparece a {r_q1_2['prop_id']} "
+                f"({r_q1_2['neighborhood']}, R$ {_fmt_brl(r_q1_2['price_brl'])})."
             ),
         },
         {
             "id": 2,
             "categoria": "busca_com_filtro",
             "q": (
-                "Procuro um terreno até R$ 150 mil para investir. "
-                "Qual é o mais recente do estoque?"
+                "Procuro um terreno no Rio Grande do Norte de até R$ 200 mil. "
+                "Qual tem a maior área em m²?"
             ),
-            "ferramenta": "search_properties",
-            "deve": ["p199", "2026"],
-            "filtros": {"prop_type": "terreno", "max_price": 150000},
+            "ferramenta": "buscar_imoveis",
+            "deve": [r_q2["prop_id"], brl_re(r_q2["area_m2"])],
+            "filtros": {"prop_type": "terreno", "max_price": 200_000},
             "gabarito": (
-                f"O terreno mais recente até R$ 150 mil é o {p199['prop_id']} "
-                f"({p199['title']}, construtora {p199['builder']}, {p199['city']}), com "
-                f"entrega em {p199['year_delivery']}, a {p199['dist_beach_km']} km da praia, "
-                f"preço de R$ {p199['price_brl']}, área de {p199['area_m2']} m², documentação "
-                f"{p199['documentation']}, yield bruto de {p199['yield_rate_pct']}% e P/VP "
-                f"{p199['p_vp']}. O segundo mais recente é o {p204['prop_id']} "
-                f"(entrega em {p204['year_delivery']}, R$ {p204['price_brl']}, posse)."
+                f"O terreno de maior área até R$ 200 mil no RN é o {r_q2['prop_id']} "
+                f"({r_q2['title']}, {r_q2['city']}, fonte {r_q2['source']}), com "
+                f"{_fmt_brl(r_q2['area_m2'])} m² por R$ {_fmt_brl(r_q2['price_brl'])}."
             ),
         },
         {
             "id": 3,
             "categoria": "busca_com_filtro",
             "q": (
-                "Quais apartamentos escriturados existem em Natal até R$ 300 mil? "
-                "Cite o mais novo."
+                "Quais apartamentos em Natal de até R$ 350 mil possuem pelo menos "
+                "2 quartos? Cite qual é o mais barato."
             ),
-            "ferramenta": "search_properties",
-            "deve": ["p322"],
+            "ferramenta": "buscar_imoveis",
+            "deve": [r_q3["prop_id"]],
             "filtros": {
                 "prop_type": "apartamento",
                 "city": "Natal",
-                "max_price": 300000,
-                "documentation": "escriturado",
+                "max_price": 350_000,
+                "min_bedrooms": 2,
             },
             "gabarito": (
-                f"Existem 3 apartamentos escriturados em Natal até R$ 300 mil: o mais novo é o "
-                f"{p322['prop_id']} ({p322['title']}, {p322['builder']}, ano "
-                f"{p322['year_delivery']}, {p322['dist_beach_km']} km da praia, "
-                f"R$ {p322['price_brl']}, {p322['area_m2']} m², yield {p322['yield_rate_pct']}%, "
-                f"P/VP {p322['p_vp']}), seguido por {p321['prop_id']} ({p321['title']}, ano "
-                f"{p321['year_delivery']}, R$ {p321['price_brl']}) e {p004['prop_id']} "
-                f"({p004['title']}, ano {p004['year_delivery']}, R$ {p004['price_brl']})."
+                f"Entre os apartamentos em Natal até R$ 350 mil com pelo menos 2 quartos "
+                f"({len(q3_sub)} opções), o mais barato é o {r_q3['prop_id']} "
+                f"({r_q3['title']}, bairro {r_q3['neighborhood']}, {int(r_q3['bedrooms'])} "
+                f"quartos, {r_q3['area_m2']} m²), por R$ {_fmt_brl(r_q3['price_brl'])}."
             ),
         },
         {
             "id": 4,
             "categoria": "busca_com_filtro",
-            "q": "Qual é o imóvel com maior retorno bruto (yield_rate_pct) em Parnamirim?",
-            "ferramenta": "search_properties",
-            "deve": ["p166|p092", "11([,.]0)?"],
+            "q": "Qual é o imóvel com o maior desconto percentual disponível em Parnamirim?",
+            "ferramenta": "buscar_imoveis",
+            "deve": [r_q4["prop_id"], num(r_q4["discount_pct"])],
             "filtros": {"city": "Parnamirim"},
             "gabarito": (
-                f"Em Parnamirim, há empate no maior yield bruto ({p166['yield_rate_pct']}%) "
-                f"entre {p166['prop_id']} ({p166['title']}, {p166['builder']}, casa, ano "
-                f"{p166['year_delivery']}, {p166['dist_beach_km']} km da praia, "
-                f"R$ {p166['price_brl']}) e {p092['prop_id']} ({p092['title']}, "
-                f"{p092['builder']}, casa, ano {p092['year_delivery']}, "
-                f"{p092['dist_beach_km']} km da praia, R$ {p092['price_brl']}). Pelo critério "
-                f"de desempate de ano de entrega, {p166['prop_id']} aparece em 1º lugar."
+                f"Em Parnamirim, o imóvel com maior desconto percentual é o {r_q4['prop_id']} "
+                f"({r_q4['title']}, {r_q4['prop_type']}, bairro {r_q4['neighborhood']}), "
+                f"com {r_q4['discount_pct']}% de desconto sobre a avaliação oficial "
+                f"(de R$ {_fmt_brl(r_q4['appraisal_value_brl'])} por "
+                f"R$ {_fmt_brl(r_q4['price_brl'])})."
             ),
         },
         {
             "id": 5,
             "categoria": "consulta_especifica",
             "q": (
-                "Em que cidade fica o imóvel p109, qual é a posição solar dele e "
-                "qual a fonte de água?"
+                f"Em qual cidade e bairro fica o imóvel {r_q5['prop_id']}, qual é a origem "
+                f"(fonte) do anúncio e qual a modalidade de venda?"
             ),
-            "ferramenta": "property_details",
-            "deve": ["n[íi]sia floresta", "nascente", "ambos"],
+            "ferramenta": "detalhes_imovel",
+            "deve": [
+                _accent_flexible_re(r_q5["city"]),
+                _accent_flexible_re(r_q5["neighborhood"]),
+                re.escape(r_q5["source"]),
+                _accent_flexible_re(r_q5["sale_modality"]),
+            ],
             "gabarito": (
-                f"O imóvel {p109['prop_id']} ({p109['title']}, construtora {p109['builder']}, "
-                f"tipo {p109['prop_type']}) fica na cidade de {p109['city']}, possui posição "
-                f"solar '{p109['sun_position']}' e fonte de água '{p109['water_source']}' "
-                f"(CAERN + poço artesiano)."
+                f"O imóvel {r_q5['prop_id']} ({r_q5['title']}) fica em {r_q5['city']}, "
+                f"no bairro {r_q5['neighborhood']}; a origem do anúncio é '{r_q5['source']}' "
+                f"e a modalidade de venda é '{r_q5['sale_modality']}'."
             ),
         },
         {
             "id": 6,
             "categoria": "consulta_especifica",
             "q": (
-                "Qual é a área em m², a taxa mensal (condomínio/IPTU) e o yield bruto "
-                "do apartamento p003?"
+                f"Qual é a área em m², a quantidade de quartos, banheiros e vagas de "
+                f"garagem do apartamento {r_q6['prop_id']}?"
             ),
-            "ferramenta": "property_details",
-            "deve": ["92", "890", num(p003["yield_rate_pct"])],
+            "ferramenta": "detalhes_imovel",
+            "deve": [
+                num(r_q6["area_m2"]),
+                str(int(r_q6["bedrooms"])),
+                str(int(r_q6["bathrooms"])),
+                str(int(r_q6["garage_spots"])),
+            ],
             "gabarito": (
-                f"O apartamento {p003['prop_id']} ({p003['title']}, {p003['builder']}, "
-                f"{p003['city']}) possui área de {p003['area_m2']} m², taxa mensal fixa "
-                f"(condomínio + IPTU) de R$ {p003['monthly_fee_brl']} e yield bruto anual de "
-                f"{p003['yield_rate_pct']}% (preço R$ {p003['price_brl']})."
+                f"O apartamento {r_q6['prop_id']} ({r_q6['title']}, {r_q6['source']}) possui "
+                f"área de {r_q6['area_m2']} m², {int(r_q6['bedrooms'])} quartos, "
+                f"{int(r_q6['bathrooms'])} banheiros e {int(r_q6['garage_spots'])} vaga(s) "
+                f"de garagem (preço R$ {_fmt_brl(r_q6['price_brl'])})."
             ),
         },
         {
             "id": 7,
             "categoria": "consulta_especifica",
             "q": (
-                "Qual é a construtora, a situação da documentação e a distância para a "
-                "praia do imóvel p061?"
+                f"Qual é o preço de venda, o valor de avaliação oficial, o percentual de "
+                f"desconto e se o imóvel {r_q7['prop_id']} aceita financiamento?"
             ),
-            "ferramenta": "property_details",
-            "deve": ["mrv", "posse", num(p061["dist_beach_km"])],
+            "ferramenta": "detalhes_imovel",
+            "deve": [
+                brl_re(r_q7["price_brl"]),
+                brl_re(r_q7["appraisal_value_brl"]),
+                num(r_q7["discount_pct"]),
+                q7_fin_regex,
+            ],
             "gabarito": (
-                f"O imóvel {p061['prop_id']} ({p061['title']}, casa em {p061['city']}) foi "
-                f"construído pela construtora {p061['builder']}, possui documentação em "
-                f"regime de '{p061['documentation']}' (não elegível a financiamento bancário) "
-                f"e fica a {p061['dist_beach_km']} km da praia."
+                f"O imóvel {r_q7['prop_id']} ({r_q7['title']}, {r_q7['city']}) tem preço de "
+                f"venda de R$ {_fmt_brl(r_q7['price_brl'])}, valor de avaliação oficial de "
+                f"R$ {_fmt_brl(r_q7['appraisal_value_brl'])}, desconto de "
+                f"{r_q7['discount_pct']}% e aceita financiamento: {q7_fin_label}."
             ),
         },
         {
             "id": 8,
             "categoria": "comparacao",
             "q": (
-                "Entre o p081 e o p082, qual tem a menor taxa mensal de manutenção e "
-                "qual entrega o maior yield bruto?"
+                f"Entre os imóveis {a_q8['prop_id']} e {b_q8['prop_id']}, qual possui o "
+                f"menor preço por m² e qual tem a maior área em m²?"
             ),
-            "ferramenta": "compare_properties|property_details",
-            "deve": ["p081", "390", num(p081["yield_rate_pct"])],
+            "ferramenta": "comparar_imoveis|detalhes_imovel",
+            "deve": [
+                a_q8["prop_id"],
+                b_q8["prop_id"],
+                brl_re(a_q8["price_per_m2"]),
+                num(b_q8["area_m2"]),
+            ],
             "gabarito": (
-                f"O imóvel {p081['prop_id']} vence em ambos os critérios: tem a menor taxa "
-                f"mensal de manutenção (R$ {p081['monthly_fee_brl']}/mês contra "
-                f"R$ {p082['monthly_fee_brl']}/mês do {p082['prop_id']}) e entrega o maior "
-                f"yield bruto ({p081['yield_rate_pct']}% ao ano contra "
-                f"{p082['yield_rate_pct']}% do {p082['prop_id']})."
+                f"Comparando {a_q8['prop_id']} e {b_q8['prop_id']}: o {a_q8['prop_id']} "
+                f"tem o menor preço por m² (R$ {_fmt_brl(a_q8['price_per_m2'])}/m² contra "
+                f"R$ {_fmt_brl(b_q8['price_per_m2'])}/m²), enquanto o {b_q8['prop_id']} tem "
+                f"a maior área ({b_q8['area_m2']} m² contra {a_q8['area_m2']} m²)."
             ),
         },
         {
             "id": 9,
             "categoria": "comparacao",
             "q": (
-                "Compare o p109 e o p061: qual tem a maior área construída e qual fica "
-                "mais próximo da praia?"
+                f"Compare os imóveis {a_q9['prop_id']} e {b_q9['prop_id']}: qual é mais "
+                f"barato no preço total e qual oferece o maior desconto percentual sobre a "
+                f"avaliação oficial?"
             ),
-            "ferramenta": "compare_properties|property_details",
-            "deve": ["p109", "155", "p061", num(p061["dist_beach_km"])],
+            "ferramenta": "comparar_imoveis|detalhes_imovel",
+            "deve": [
+                a_q9["prop_id"],
+                b_q9["prop_id"],
+                brl_re(a_q9["price_brl"]),
+                num(b_q9["discount_pct"]),
+            ],
             "gabarito": (
-                f"Comparando {p109['prop_id']} e {p061['prop_id']}: o {p109['prop_id']} "
-                f"({p109['title']}, {p109['city']}) tem a maior área construída "
-                f"({p109['area_m2']} m² contra {p061['area_m2']} m² do {p061['prop_id']}), "
-                f"enquanto o {p061['prop_id']} ({p061['title']}, {p061['city']}) fica mais "
-                f"próximo da praia ({p061['dist_beach_km']} km contra "
-                f"{p109['dist_beach_km']} km do {p109['prop_id']})."
+                f"Entre {a_q9['prop_id']} e {b_q9['prop_id']}: o {a_q9['prop_id']} é mais "
+                f"barato no preço total (R$ {_fmt_brl(a_q9['price_brl'])} contra "
+                f"R$ {_fmt_brl(b_q9['price_brl'])}), já o {b_q9['prop_id']} oferece o maior "
+                f"desconto percentual ({b_q9['discount_pct']}% contra "
+                f"{a_q9['discount_pct']}%)."
             ),
         },
         {
             "id": 10,
             "categoria": "comparacao",
             "q": (
-                "Quero uma casa até R$ 350 mil. Compare as duas mais novas do estoque "
-                "e me diga qual você escolheria e por quê."
+                "Busque os dois apartamentos mais baratos em Ponta Negra (Natal) de até "
+                "R$ 450 mil, compare-os lado a lado e me diga qual você escolheria e por quê."
             ),
-            "ferramenta": "compare_properties",
-            "deve": ["p082", "p081"],
-            "filtros": {"prop_type": "casa", "max_price": 350000},
+            "ferramenta": "comparar_imoveis",
+            "deve": [a_q10["prop_id"], b_q10["prop_id"]],
+            "filtros": {"prop_type": "apartamento", "city": "Natal", "max_price": 450_000},
             "gabarito": (
-                f"As duas casas mais novas até R$ 350 mil são {p082['prop_id']} e "
-                f"{p081['prop_id']} (ambas {p082['title']}/{p082['builder']}, entrega "
-                f"{p082['year_delivery']}, {p082['area_m2']} m², escrituradas). "
-                f"{p082['prop_id']} ({p082['city']}) é mais próxima da praia "
-                f"({p082['dist_beach_km']} km vs {p081['dist_beach_km']} km), porém "
-                f"{p081['prop_id']} ({p081['city']}) é mais barata (R$ {p081['price_brl']} "
-                f"vs R$ {p082['price_brl']}), tem menor condomínio/IPTU "
-                f"(R$ {p081['monthly_fee_brl']} vs R$ {p082['monthly_fee_brl']}), posição "
-                f"nascente (vs poente), maior yield bruto ({p081['yield_rate_pct']}% vs "
-                f"{p082['yield_rate_pct']}%), maior Cap Rate líquido "
-                f"({p081['net_cap_rate_pct']}% vs {p082['net_cap_rate_pct']}%) e menor P/VP "
-                f"({p081['p_vp']} vs {p082['p_vp']})."
+                f"Os dois apartamentos mais baratos em Ponta Negra (Natal) até R$ 450 mil "
+                f"são {a_q10['prop_id']} (R$ {_fmt_brl(a_q10['price_brl'])}, "
+                f"{a_q10['area_m2']} m², P/VP de mercado {a_q10['p_vp_mercado']}, fonte "
+                f"{a_q10['source']}) e {b_q10['prop_id']} (R$ {_fmt_brl(b_q10['price_brl'])}, "
+                f"{b_q10['area_m2']} m², P/VP de mercado {b_q10['p_vp_mercado']}, fonte "
+                f"{b_q10['source']}). O {a_q10['prop_id']} destaca-se pelo menor preço total, "
+                f"menor preço/m² e menor P/VP de mercado."
             ),
         },
         {
             "id": 11,
             "categoria": "comparacao",
             "q": (
-                "Busque os dois apartamentos mais novos em Natal até R$ 450 mil e "
-                "compare-os: qual fica mais perto da praia e qual é o mais barato?"
+                "Busque as duas casas com maior desconto em Parnamirim e compare-as: "
+                "qual tem a maior área em m² e qual tem o menor preço por m²?"
             ),
-            "ferramenta": "compare_properties|search_properties",
-            "deve": ["p297", "p318", num(p297["dist_beach_km"])],
-            "filtros": {"prop_type": "apartamento", "city": "Natal", "max_price": 450000},
+            "ferramenta": "comparar_imoveis|buscar_imoveis",
+            "deve": [
+                a_q11["prop_id"],
+                b_q11["prop_id"],
+                num(q11_area_win["area_m2"]),
+                brl_re(q11_ppm_win["price_per_m2"]),
+            ],
+            "filtros": {"prop_type": "casa", "city": "Parnamirim"},
             "gabarito": (
-                f"Os dois apartamentos mais novos em Natal até R$ 450 mil são "
-                f"{p297['prop_id']} ({p297['title']}, {p297['builder']}, entrega "
-                f"{p297['year_delivery']}) e {p318['prop_id']} ({p318['title']}, "
-                f"{p318['builder']}, entrega {p318['year_delivery']}). O {p297['prop_id']} "
-                f"fica mais perto da praia ({p297['dist_beach_km']} km contra "
-                f"{p318['dist_beach_km']} km do {p318['prop_id']}), enquanto o "
-                f"{p318['prop_id']} é o mais barato (R$ {p318['price_brl']} contra "
-                f"R$ {p297['price_brl']} do {p297['prop_id']})."
+                f"As duas casas com maior desconto em Parnamirim são {a_q11['prop_id']} "
+                f"({a_q11['discount_pct']}% de desconto, {a_q11['area_m2']} m², "
+                f"R$ {_fmt_brl(a_q11['price_per_m2'])}/m²) e {b_q11['prop_id']} "
+                f"({b_q11['discount_pct']}% de desconto, {b_q11['area_m2']} m², "
+                f"R$ {_fmt_brl(b_q11['price_per_m2'])}/m²). A maior área é da "
+                f"{q11_area_win['prop_id']} ({q11_area_win['area_m2']} m²) e o menor preço "
+                f"por m² é da {q11_ppm_win['prop_id']} "
+                f"(R$ {_fmt_brl(q11_ppm_win['price_per_m2'])}/m²)."
             ),
         },
         {
             "id": 12,
             "categoria": "calculo_financeiro",
             "q": (
-                "Calcule o preço por m², o Valor Patrimonial estimado e o índice P/VP "
-                "da casa p081. Ela está sendo negociada com ágio ou deságio?"
+                f"Calcule o preço por m², o Valor Patrimonial estimado de mercado e o índice "
+                f"P/VP de mercado do imóvel {r_q12['prop_id']}. Ele está sendo negociado "
+                f"com ágio ou deságio em relação à média da cidade?"
             ),
-            "ferramenta": "evaluate_investment|property_details",
-            "deve": ["1750", num(p081["p_vp"]), "des[áa]gio|abaixo"],
+            "ferramenta": "avaliar_investimento|detalhes_imovel",
+            "deve": [
+                brl_re(r_q12["price_per_m2"]),
+                brl_re(r_q12["vp_estimado_brl"]),
+                num(r_q12["p_vp_mercado"]),
+                r"des[áa]gio|abaixo",
+            ],
             "gabarito": (
-                f"Para a casa {p081['prop_id']} (preço R$ {p081['price_brl']}, área "
-                f"{p081['area_m2']} m² em {p081['city']}): preço por m² = "
-                f"R$ {p081['price_per_m2']:.2f}/m², Valor Patrimonial estimado (VP) = "
-                f"R$ {p081['vp_estimado_brl']:.2f} e índice P/VP = {p081['p_vp']:.2f}. "
-                f"Como P/VP < 1.0 ({p081['p_vp']:.2f}), ela está sendo negociada com "
-                f"deságio (abaixo do valor patrimonial médio de casas em Natal)."
+                f"Para o imóvel {r_q12['prop_id']} ({r_q12['city']}, {r_q12['prop_type']}): "
+                f"preço por m² = R$ {_fmt_brl(r_q12['price_per_m2'])}/m², Valor Patrimonial "
+                f"estimado de mercado = R$ {_fmt_brl(r_q12['vp_estimado_brl'])} e índice P/VP "
+                f"de mercado = {r_q12['p_vp_mercado']}. Como P/VP < 1,0, está sendo "
+                f"negociado com deságio (abaixo da média da cidade)."
             ),
         },
         {
             "id": 13,
             "categoria": "calculo_financeiro",
             "q": (
-                "Qual é a receita líquida anual (NOI), o Cap Rate líquido e o tempo de "
-                "payback em anos do apartamento p003?"
+                f"Para o imóvel {r_q13['prop_id']} da Caixa, qual é o índice P/VP em relação "
+                f"à avaliação oficial do banco, qual a economia absoluta em reais (deságio) "
+                f"e quanto seria uma entrada de 20%?"
             ),
-            "ferramenta": "evaluate_investment|property_details",
+            "ferramenta": "avaliar_investimento|detalhes_imovel",
             "deve": [
-                "17[._]?880",
-                num(p003["net_cap_rate_pct"]),
-                f"{num(p003['payback_years'])}|{num(round(p003['payback_years'], 1))}",
+                num(r_q13["p_vp_caixa"]),
+                brl_re(r_q13["economia_brl"]),
+                brl_re(r_q13["entrada_20_pct_brl"]),
             ],
             "gabarito": (
-                f"Para o apartamento {p003['prop_id']} (preço R$ {p003['price_brl']}, yield "
-                f"bruto {p003['yield_rate_pct']}%, receita bruta anual "
-                f"R$ {p003['gross_annual_brl']:.2f}, custo anual R$ {p003['annual_fee_brl']}): "
-                f"receita líquida anual (NOI) = R$ {p003['noi_annual_brl']:.2f}, Cap Rate "
-                f"líquido = {p003['net_cap_rate_pct']:.2f}% ao ano e payback líquido = "
-                f"{p003['payback_years']:.2f} anos."
+                f"Para o imóvel {r_q13['prop_id']} ({r_q13['city']}, preço "
+                f"R$ {_fmt_brl(r_q13['price_brl'])}, avaliação oficial "
+                f"R$ {_fmt_brl(r_q13['appraisal_value_brl'])}): o índice P/VP Caixa é "
+                f"{r_q13['p_vp_caixa']}, a economia absoluta (deságio) é de "
+                f"R$ {_fmt_brl(r_q13['economia_brl'])} e uma entrada de 20% equivale a "
+                f"R$ {_fmt_brl(r_q13['entrada_20_pct_brl'])}."
             ),
         },
         {
             "id": 14,
             "categoria": "calculo_financeiro",
             "q": (
-                "Compare os indicadores de valuation dos terrenos p199 e p204: qual "
-                "possui o menor P/VP e qual tem o menor payback líquido?"
+                f"Compare os indicadores de valuation dos imóveis {a_q14['prop_id']} e "
+                f"{b_q14['prop_id']}: qual possui o menor P/VP de mercado e qual tem o "
+                f"menor custo por quarto?"
             ),
-            "ferramenta": "compare_properties|evaluate_investment|property_details",
+            "ferramenta": "comparar_imoveis|avaliar_investimento|detalhes_imovel",
             "deve": [
-                "p204",
-                num(p204["p_vp"]),
-                "p199",
-                f"{num(p199['payback_years'])}|{num(round(p199['payback_years'], 1))}",
+                a_q14["prop_id"],
+                num(a_q14["p_vp_mercado"]),
+                b_q14["prop_id"],
+                brl_re(b_q14["price_per_bedroom"]),
             ],
             "gabarito": (
-                f"Entre {p199['prop_id']} e {p204['prop_id']}: o terreno {p204['prop_id']} "
-                f"possui o menor P/VP ({p204['p_vp']:.2f}, com deságio, contra "
-                f"{p199['p_vp']:.2f} do {p199['prop_id']}), enquanto o terreno "
-                f"{p199['prop_id']} tem o menor payback líquido ({p199['payback_years']:.2f} "
-                f"anos, NOI R$ {p199['noi_annual_brl']:.2f} e Cap Rate líquido "
-                f"{p199['net_cap_rate_pct']:.2f}%, contra payback de "
-                f"{p204['payback_years']:.2f} anos e Cap Rate {p204['net_cap_rate_pct']:.2f}% "
-                f"do {p204['prop_id']})."
+                f"Entre {a_q14['prop_id']} e {b_q14['prop_id']}: o {a_q14['prop_id']} possui "
+                f"o menor P/VP de mercado ({a_q14['p_vp_mercado']} contra "
+                f"{b_q14['p_vp_mercado']} do {b_q14['prop_id']}), enquanto o "
+                f"{b_q14['prop_id']} tem o menor custo por quarto "
+                f"(R$ {_fmt_brl(b_q14['price_per_bedroom'])}/quarto contra "
+                f"R$ {_fmt_brl(a_q14['price_per_bedroom'])}/quarto)."
             ),
         },
         {
             "id": 15,
             "categoria": "calculo_financeiro",
             "q": (
-                "Em Parnamirim, os imóveis p166 e p092 empatam no maior yield bruto "
-                "(11%). Comparando os dois, qual entrega a maior renda líquida anual "
-                "(NOI) / Cap Rate líquido, e qual possui o menor P/VP?"
+                f"Comparando os terrenos {a_q15['prop_id']} e {b_q15['prop_id']}, qual "
+                f"oferece o menor preço por m² e qual possui o menor índice P/VP de mercado?"
             ),
-            "ferramenta": "compare_properties|evaluate_investment|property_details",
+            "ferramenta": "comparar_imoveis|avaliar_investimento|detalhes_imovel",
             "deve": [
-                "p166",
-                f"36[._]?865|{num(p166['net_cap_rate_pct'])}",
-                "p092",
-                num(p092["p_vp"]),
+                q15_ppm_win["prop_id"],
+                brl_re(q15_ppm_win["price_per_m2"]),
+                q15_pvp_win["prop_id"],
+                num(q15_pvp_win["p_vp_mercado"]),
             ],
             "gabarito": (
-                f"Comparando {p166['prop_id']} e {p092['prop_id']} (ambos em Parnamirim com "
-                f"yield bruto de 11.0%): o {p166['prop_id']} entrega a maior renda líquida "
-                f"anual (NOI = R$ {p166['noi_annual_brl']:.2f} vs "
-                f"R$ {p092['noi_annual_brl']:.2f}) e o maior Cap Rate líquido "
-                f"({p166['net_cap_rate_pct']:.2f}% vs {p092['net_cap_rate_pct']:.2f}%), "
-                f"enquanto o {p092['prop_id']} possui o menor P/VP ({p092['p_vp']:.2f} vs "
-                f"{p166['p_vp']:.2f} do {p166['prop_id']})."
+                f"Comparando os terrenos {a_q15['prop_id']} ({a_q15['city']}, "
+                f"R$ {_fmt_brl(a_q15['price_per_m2'])}/m², P/VP {a_q15['p_vp_mercado']}) e "
+                f"{b_q15['prop_id']} ({b_q15['city']}, "
+                f"R$ {_fmt_brl(b_q15['price_per_m2'])}/m², P/VP {b_q15['p_vp_mercado']}): "
+                f"o menor preço por m² é do {q15_ppm_win['prop_id']} "
+                f"(R$ {_fmt_brl(q15_ppm_win['price_per_m2'])}/m²) e o menor P/VP de mercado "
+                f"é do {q15_pvp_win['prop_id']} ({q15_pvp_win['p_vp_mercado']})."
             ),
         },
         {
             "id": 16,
             "categoria": "pegadinha",
             "q": (
-                "Preciso comprar um terreno usando financiamento bancário e estou em "
-                "dúvida entre o p204 (R$ 138 mil) e o p199 (R$ 145 mil). Qual dos dois "
-                "eu devo escolher para financiar pagando menos?"
+                f"Preciso comprar uma casa em {yes_fin_16['city']} usando financiamento "
+                f"bancário e estou em dúvida entre {no_fin_16['prop_id']} "
+                f"(por R$ {_fmt_brl(no_fin_16['price_brl'])}) e {yes_fin_16['prop_id']} "
+                f"(por R$ {_fmt_brl(yes_fin_16['price_brl'])}). Qual dos dois devo escolher "
+                f"para financiar pagando menos?"
             ),
-            "ferramenta": "compare_properties|evaluate_investment|property_details",
-            "deve": ["p199", "posse", "escriturado"],
+            "ferramenta": "comparar_imoveis|avaliar_investimento|detalhes_imovel",
+            "deve": [
+                yes_fin_16["prop_id"],
+                r"n[ãa]o (?:aceita|financi|é financi|permite)|sem financiamento|imposs[íi]vel",
+            ],
             "gabarito": (
-                f"Pegadinha de elegibilidade a financiamento bancário: embora o "
-                f"{p204['prop_id']} seja mais barato (R$ {p204['price_brl']}), sua "
-                f"documentação é '{p204['documentation']}' (financing_eligible=False) e não "
-                f"pode ser financiado por banco. Portanto, o {p199['prop_id']} "
-                f"(R$ {p199['price_brl']}, documentação '{p199['documentation']}', "
-                f"financing_eligible=True) é a única escolha viável para financiamento."
+                f"Pegadinha de financiamento: embora a casa {no_fin_16['prop_id']} seja mais "
+                f"barata (R$ {_fmt_brl(no_fin_16['price_brl'])}), ela não aceita "
+                f"financiamento bancário. Assim, a {yes_fin_16['prop_id']} "
+                f"(R$ {_fmt_brl(yes_fin_16['price_brl'])}) é a única escolha viável para "
+                f"financiar."
             ),
         },
         {
             "id": 17,
             "categoria": "pegadinha",
             "q": (
-                "Procuro um terreno em Extremoz até R$ 150 mil que seja obrigatoriamente "
-                "escriturado. Qual é o mais recente?"
+                f"Quero comprar um imóvel da Caixa em {r_q17['city']} pagando abaixo da "
+                f"avaliação oficial do banco. O imóvel {r_q17['prop_id']} (no bairro "
+                f"{r_q17['neighborhood']}) está com deságio ou ágio em relação à avaliação? "
+                f"Ele atende ao meu critério?"
             ),
-            "ferramenta": "search_properties",
-            "deve": ["p206", "2022", "110[._]?000|110 mil"],
-            "filtros": {
-                "prop_type": "terreno",
-                "city": "Extremoz",
-                "max_price": 150000,
-                "documentation": "escriturado",
-            },
+            "ferramenta": "avaliar_investimento|detalhes_imovel",
+            "deve": [
+                r"[áa]gio|acima",
+                r"n[ãa]o atende|n[ãa]o cumpr|acima da avalia",
+                num(r_q17["p_vp_caixa"]),
+            ],
             "gabarito": (
-                f"O terreno escriturado mais recente em Extremoz até R$ 150 mil é o "
-                f"{p206['prop_id']} ({p206['title']}, {p206['builder']}), entregue em "
-                f"{p206['year_delivery']}, a {p206['dist_beach_km']} km da praia, por "
-                f"R$ {p206['price_brl']} ({p206['area_m2']} m²). Os terrenos mais novos em "
-                f"Extremoz nessa faixa de preço (p204 de 2025, p219 e p221 de 2024, e p205 "
-                f"de 2023) possuem documentação de 'posse' e devem ser descartados."
+                f"Pegadinha de ágio na Caixa: o imóvel {r_q17['prop_id']} ({r_q17['city']}, "
+                f"bairro {r_q17['neighborhood']}) está anunciado por "
+                f"R$ {_fmt_brl(r_q17['price_brl'])}, acima da avaliação oficial de "
+                f"R$ {_fmt_brl(r_q17['appraisal_value_brl'])} (P/VP Caixa = "
+                f"{r_q17['p_vp_caixa']}, ágio de R$ {_fmt_brl(abs(r_q17['economia_brl']))}). "
+                f"Portanto, está com ágio e não atende ao critério de pagar abaixo da "
+                f"avaliação."
             ),
         },
         {
             "id": 18,
             "categoria": "fora_do_escopo",
-            "q": "Qual é a posição solar, a fonte de água e o P/VP do imóvel p999?",
-            "ferramenta": "property_details|evaluate_investment",
+            "q": "Qual é o bairro, o preço e o índice P/VP do imóvel r9999?",
+            "ferramenta": "detalhes_imovel|avaliar_investimento",
             "deve": [r"n[ãa]o (existe|encontr|há|ha|consta|dispon)|nenhum|inexist"],
-            "proibido": ["nascente", "poente", "caern", "poco_artesiano"],
+            "proibido": ["ponta negra", "tirol", "planalto", "nova esperan[çc]a"],
             "gabarito": (
-                "O imóvel p999 não existe no catálogo (que contém apenas p001 a p360; "
-                "a ferramenta retorna {'error': 'no property with id p999'}). O assistente "
-                "deve informar que o código p999 é inexistente sem inventar posição solar, "
-                "fonte de água ou P/VP."
+                "O imóvel r9999 não existe no catálogo (a ferramenta retorna erro "
+                "informando que nenhum imóvel foi encontrado com esse código). O assistente "
+                "deve avisar que r9999 é inexistente sem inventar bairro, preço ou P/VP."
             ),
         },
         {
             "id": 19,
             "categoria": "fora_do_escopo",
             "q": (
-                "Compare lado a lado os imóveis p081, p082 e p404, indicando qual é "
-                "o mais barato."
+                f"Compare lado a lado os imóveis {a_q19['prop_id']}, {b_q19['prop_id']} e "
+                f"r9404, indicando qual é o mais barato."
             ),
-            "ferramenta": "compare_properties",
-            "deve": ["p081", "p082", "p404"],
+            "ferramenta": "comparar_imoveis",
+            "deve": [
+                a_q19["prop_id"],
+                b_q19["prop_id"],
+                "r9404",
+                brl_re(cheapest_19["price_brl"]),
+            ],
             "gabarito": (
-                f"O código p404 não existe no estoque e é retornado em missing=['p404'], "
-                f"devendo ser reportado como inexistente/não encontrado. Entre os dois "
-                f"imóveis válidos ({p081['prop_id']} por R$ {p081['price_brl']} e "
-                f"{p082['prop_id']} por R$ {p082['price_brl']}), o {p081['prop_id']} vence "
-                f"como o mais barato por R$ {p081['price_brl']}."
+                f"O código r9404 não existe no estoque (retornado em nao_encontrados) e "
+                f"deve ser reportado como inexistente. Entre os dois imóveis válidos "
+                f"({a_q19['prop_id']} por R$ {_fmt_brl(a_q19['price_brl'])} e "
+                f"{b_q19['prop_id']} por R$ {_fmt_brl(b_q19['price_brl'])}), o mais barato "
+                f"é o {cheapest_19['prop_id']} por R$ {_fmt_brl(cheapest_19['price_brl'])}."
             ),
         },
         {
             "id": 20,
             "categoria": "fora_do_escopo",
             "q": (
-                "Quantos quartos e vagas de garagem tem a casa p081, e o proprietário "
-                "aceita um carro usado como parte do pagamento?"
+                f"Qual é a posição solar (nascente/poente), se possui poço artesiano e se "
+                f"o proprietário do imóvel {r_q20['prop_id']} aceita um carro usado como "
+                f"parte do pagamento?"
             ),
-            "ferramenta": "property_details",
-            "deve": ["p081", r"n[ãa]o (consta|inform|possui|registr|dispon|tem|há|ha)"],
+            "ferramenta": "detalhes_imovel",
+            "deve": [
+                r_q20["prop_id"],
+                r"n[ãa]o (consta|inform|possui|registr|dispon|tem|há|ha)",
+            ],
             "gabarito": (
-                f"O catálogo não registra número de quartos, vagas de garagem ou política "
-                f"de permuta/aceitação de veículo usado como parte do pagamento. Para a casa "
-                f"{p081['prop_id']} ({p081['title']}, {p081['city']}), os dados disponíveis "
-                f"são área de {p081['area_m2']} m², preço de R$ {p081['price_brl']}, "
-                f"documentação '{p081['documentation']}', fonte de água "
-                f"'{p081['water_source']}' e posição solar '{p081['sun_position']}'."
+                f"O catálogo não registra posição solar, presença de poço artesiano nem "
+                f"política de permuta ou aceitação de carro usado como parte do pagamento. "
+                f"Para o imóvel {r_q20['prop_id']} ({r_q20['city']}, {r_q20['neighborhood']}), "
+                f"constam apenas os dados cadastrais e de avaliação disponíveis no estoque."
             ),
         },
     ]
@@ -526,14 +853,14 @@ def _check_cited_ids_against_filters(
     pergunta_dict: dict[str, Any],
     resposta: str,
 ) -> list[str]:
-    """Verify that any ``p\\d{3}`` cited in ``resposta`` satisfies ``pergunta_dict['filtros']``."""
+    """Verify that any ``r\\d{3,4}`` cited in ``resposta`` satisfies ``filtros``."""
     filtros = pergunta_dict.get("filtros")
     if not filtros:
         return []
 
     errors: list[str] = []
     prompt_ids = {m.lower() for m in PROP_ID_RE.findall(pergunta_dict.get("q", ""))}
-    cited_ids = []
+    cited_ids: list[str] = []
     for match in PROP_ID_RE.findall(resposta):
         pid = match.lower()
         if pid not in cited_ids:
@@ -557,22 +884,28 @@ def _check_cited_ids_against_filters(
                 f"violacao_filtro: {pid} tem price_brl={row['price_brl']} "
                 f"> max_price={filtros['max_price']}"
             )
-        if "city" in filtros and row["city"].lower() != str(filtros["city"]).lower():
-            errors.append(
-                f"violacao_filtro: {pid} fica em {row['city']!r} "
-                f"(esperado {filtros['city']!r})"
-            )
-        if "documentation" in filtros and row["documentation"] != filtros["documentation"]:
-            # Allow citing a non-matching ID in a 'pegadinha' response only when the
-            # response explicitly flags 'posse' to reject it in favor of the 'escriturado' ID.
-            is_rejected_posse = (
-                pergunta_dict.get("categoria") == "pegadinha"
-                and bool(re.search(r"\bposse\b", resposta, re.IGNORECASE))
-            )
-            if not is_rejected_posse:
+        if "city" in filtros:
+            expected_city = _normalize_text(filtros["city"])
+            actual_city = _normalize_text(row["city"])
+            if expected_city not in actual_city and actual_city != expected_city:
                 errors.append(
-                    f"violacao_filtro: {pid} tem documentation={row['documentation']!r} "
-                    f"(esperado {filtros['documentation']!r})"
+                    f"violacao_filtro: {pid} fica em {row['city']!r} "
+                    f"(esperado {filtros['city']!r})"
+                )
+        if "min_bedrooms" in filtros:
+            beds = row.get("bedrooms")
+            if beds is None or pd.isna(beds) or int(beds) < int(filtros["min_bedrooms"]):
+                errors.append(
+                    f"violacao_filtro: {pid} tem bedrooms={beds!r} "
+                    f"(< {filtros['min_bedrooms']})"
+                )
+        if "accepts_financing" in filtros:
+            fin = row.get("accepts_financing")
+            expected_fin = bool(filtros["accepts_financing"])
+            if fin is None or pd.isna(fin) or bool(fin) != expected_fin:
+                errors.append(
+                    f"violacao_filtro: {pid} tem accepts_financing={fin!r} "
+                    f"(esperado {expected_fin!r})"
                 )
 
     return errors
@@ -613,9 +946,9 @@ def checagem_automatica(
 
 
 def main() -> None:
-    """Print a summary table of all 20 benchmark questions and run self-checks."""
+    """Print a summary table of all 20 PT-BR benchmark questions and run self-checks."""
     assert len(PERGUNTAS) == 20, f"Expected 20 questions, got {len(PERGUNTAS)}"
-    header = f"{'ID':>2} | {'Categoria':<20} | {'Ferramenta':<49} | {'Gabarito (110 chars)'}"
+    header = f"{'ID':>2} | {'Categoria':<20} | {'Ferramenta':<54} | {'Gabarito (110 chars)'}"
     print(header)
     print("-" * len(header))
     for item in PERGUNTAS:
@@ -623,20 +956,15 @@ def main() -> None:
         cat = item["categoria"]
         tool = item["ferramenta"]
         gab_preview = item["gabarito"][:110]
-        print(f"{qid:>2} | {cat:<20} | {tool:<49} | {gab_preview}")
+        print(f"{qid:>2} | {cat:<20} | {tool:<54} | {gab_preview}")
 
-        # Self-verify that each question's own gabarito satisfies its 'deve' / 'proibido' rules
-        # (using the primary expected tool).
         primary_tool = tool.split("|")[0]
         synthetic_trace = {
             "resposta": item["gabarito"],
             "ferramentas_usadas": [primary_tool],
         }
-        # Only run automatic check on gabarito when proibido words aren't mentioned
-        # meta-linguistically in Q18's explanation.
-        if qid != 18:
-            errs = checagem_automatica(item, synthetic_trace)
-            assert not errs, f"Self-check failed on Q{qid}: {errs}"
+        errs = checagem_automatica(item, synthetic_trace)
+        assert not errs, f"Self-check failed on Q{qid}: {errs}"
 
 
 if __name__ == "__main__":
