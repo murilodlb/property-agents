@@ -27,6 +27,9 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.pyright]
 venvPath = "."
 venv = ".venv"

@@ -1,16 +1,30 @@
 #!/usr/bin/env python3
-"""FastMCP server ('imoveis-rn') exposing real-estate search and valuation tools in PT-BR."""
+"""FastMCP server ('imoveis-rn') exposing 6 PT-BR real-estate search & valuation tools."""
 
 from __future__ import annotations
 
-import math
-import unicodedata
+import sys
 from pathlib import Path
 from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
 from fastmcp import FastMCP
+
+_REPO_ROOT = str(Path(__file__).resolve().parent.parent)
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
+from src.catalog import (  # noqa: E402
+    clean_value,
+    limpar_nulos,
+    load_catalog,
+    normalize_text,
+    valuation_status,
+)
+
+_limpar_nulos = limpar_nulos
+_normalize_text = normalize_text
 
 mcp = FastMCP("imoveis-rn")
 
@@ -33,141 +47,64 @@ COMPARE_METRICS: list[tuple[str, str, str]] = [
     ("menor_preco_por_quarto", "price_per_bedroom", "min"),
 ]
 
-
-def _resolve_csv_path() -> Path:
-    """Resolve ``real_properties.csv`` from working directory or repository root."""
-    candidates = [
-        Path("data/real_properties.csv"),
-        Path("real_properties.csv"),
-        Path(__file__).resolve().parent.parent / "data" / "real_properties.csv",
-    ]
-    for path in candidates:
-        if path.is_file():
-            return path
-    raise FileNotFoundError(
-        "Could not locate data/real_properties.csv or real_properties.csv"
-    )
-
-
-def _normalize_text(value: Any) -> str:
-    """Return lowercase ASCII-folded text without accents or surrounding whitespace."""
-    if value is None:
-        return ""
-    if isinstance(value, float) and math.isnan(value):
-        return ""
-    if pd.isna(value):
-        return ""
-    folded = unicodedata.normalize("NFD", str(value).strip().lower())
-    return "".join(ch for ch in folded if unicodedata.category(ch) != "Mn")
-
-
-def _clean_value(value: Any) -> Any:
-    """Convert numpy/pandas scalars and NA/NaN values to native JSON-safe Python types."""
-    if value is None:
-        return None
-    if isinstance(value, dict):
-        return _limpar_nulos(value)
-    if isinstance(value, (list, tuple)):
-        return [_clean_value(item) for item in value]
-    if isinstance(value, (np.bool_, bool)):
-        return bool(value)
-    if isinstance(value, (np.integer, int)):
-        return int(value)
-    if isinstance(value, (np.floating, float)):
-        num_val = float(value)
-        return None if (math.isnan(num_val) or math.isinf(num_val)) else num_val
-    if bool(pd.isna(value)):
-        return None
-    return value
-
-
-def _limpar_nulos(record: dict[str, Any]) -> dict[str, Any]:
-    """Convert any NaN/NA/numpy scalars in ``record`` into native Python types or None."""
-    return {str(key): _clean_value(val) for key, val in record.items()}
-
-
-def load_catalog() -> pd.DataFrame:
-    """Load ``real_properties.csv`` and compute deterministic real-estate valuation metrics."""
-    catalog = pd.read_csv(_resolve_csv_path())
-    for int_col in ("bedrooms", "bathrooms", "garage_spots"):
-        catalog[int_col] = catalog[int_col].astype("Int64")
-    catalog["accepts_financing"] = catalog["accepts_financing"].astype("boolean")
-
-    area_vals = catalog["area_m2"].to_numpy(dtype=float, na_value=np.nan)
-    price_vals = catalog["price_brl"].to_numpy(dtype=float, na_value=np.nan)
-    area_pos = catalog["area_m2"].gt(0).fillna(False).to_numpy(dtype=bool)
-    catalog["price_per_m2"] = np.round(
-        np.divide(price_vals, area_vals, out=np.full_like(price_vals, np.nan), where=area_pos),
-        2,
-    )
-    group_ref_m2 = catalog.groupby(["city", "prop_type"])["price_per_m2"].transform("mean")
-    type_ref_m2 = catalog.groupby("prop_type")["price_per_m2"].transform("mean")
-    ref_m2_vals = np.where(
-        pd.notna(group_ref_m2),
-        np.asarray(group_ref_m2, dtype=float),
-        np.asarray(type_ref_m2, dtype=float),
-    )
-    catalog["ref_m2_brl"] = np.round(ref_m2_vals, 2)
-    catalog["vp_estimado_brl"] = (catalog["area_m2"] * catalog["ref_m2_brl"]).round(2)
-
-    vp_vals = catalog["vp_estimado_brl"].to_numpy(dtype=float, na_value=np.nan)
-    vp_pos = catalog["vp_estimado_brl"].gt(0).fillna(False).to_numpy(dtype=bool)
-    catalog["p_vp_mercado"] = np.round(
-        np.divide(price_vals, vp_vals, out=np.full_like(price_vals, np.nan), where=vp_pos),
-        2,
-    )
-
-    appr_vals = catalog["appraisal_value_brl"].to_numpy(dtype=float, na_value=np.nan)
-    appr_pos = catalog["appraisal_value_brl"].gt(0).fillna(False).to_numpy(dtype=bool)
-    catalog["p_vp_caixa"] = np.round(
-        np.divide(price_vals, appr_vals, out=np.full_like(price_vals, np.nan), where=appr_pos),
-        2,
-    )
-    catalog["economia_brl"] = (
-        catalog["appraisal_value_brl"] - catalog["price_brl"]
-    ).round(2)
-
-    bed_pos = catalog["bedrooms"].gt(0).fillna(False).to_numpy(dtype=bool)
-    bedrooms_float = catalog["bedrooms"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
-    catalog["price_per_bedroom"] = np.round(
-        np.divide(price_vals, bedrooms_float, out=np.full_like(price_vals, np.nan), where=bed_pos),
-        2,
-    )
-    catalog["entrada_20_pct_brl"] = (catalog["price_brl"] * 0.20).round(2)
-    catalog["itbi_registro_est_brl"] = (catalog["price_brl"] * 0.045).round(2)
-    return catalog
-
-
 df: pd.DataFrame = load_catalog()
 
-_CITY_NORM = pd.Series([_normalize_text(v) for v in df["city"]], index=df.index)
-_NEIGHBORHOOD_NORM = pd.Series([_normalize_text(v) for v in df["neighborhood"]], index=df.index)
-_SOURCE_NORM = pd.Series([_normalize_text(v) for v in df["source"]], index=df.index)
-_TYPE_NORM = pd.Series([_normalize_text(v) for v in df["prop_type"]], index=df.index)
-_ID_LOWER = pd.Series([str(v).strip().lower() for v in df["prop_id"]], index=df.index)
+_CITY_NORM = pd.Series([normalize_text(v) for v in df["city"]], index=df.index)
+_NEIGHBORHOOD_NORM = pd.Series([normalize_text(v) for v in df["neighborhood"]], index=df.index)
+_SOURCE_NORM = pd.Series([normalize_text(v) for v in df["source"]], index=df.index)
+_TYPE_NORM = pd.Series([normalize_text(v) for v in df["prop_type"]], index=df.index)
+_SEGMENT_NORM = pd.Series([normalize_text(v) for v in df["market_segment"]], index=df.index)
 _ID_TO_POS: dict[str, int] = {
     str(pid).strip().lower(): pos for pos, pid in enumerate(df["prop_id"])
 }
 
 
-def _valuation_status(p_vp: Any) -> str | None:
-    """Classify P/VP ratio as 'desagio', 'agio', 'par', or None."""
-    cleaned = _clean_value(p_vp)
-    if cleaned is None:
-        return None
-    if cleaned < 1.0:
-        return "desagio"
-    if cleaned > 1.0:
-        return "agio"
-    return "par"
+def _filter_mask(
+    preco_maximo: float | None = None,
+    tipo_imovel: str | None = None,
+    cidade: str | None = None,
+    bairro: str | None = None,
+    fonte: str | None = None,
+    segmento_mercado: str | None = None,
+    quartos_minimo: int | None = None,
+    aceita_financiamento: bool | None = None,
+) -> np.ndarray:
+    """Build a boolean mask for filtering ``df`` across all search and aggregate tools."""
+    mask = np.ones(len(df), dtype=bool)
+    if preco_maximo is not None:
+        mask &= df["price_brl"].le(preco_maximo).fillna(False).to_numpy(dtype=bool)
+    if tipo_imovel is not None:
+        mask &= _TYPE_NORM.eq(normalize_text(tipo_imovel)).to_numpy(dtype=bool)
+    if cidade is not None:
+        mask &= _CITY_NORM.str.contains(normalize_text(cidade), regex=False).to_numpy(dtype=bool)
+    if bairro is not None:
+        mask &= (
+            _NEIGHBORHOOD_NORM.str.contains(normalize_text(bairro), regex=False)
+            .to_numpy(dtype=bool)
+        )
+    if fonte is not None:
+        mask &= _SOURCE_NORM.str.contains(normalize_text(fonte), regex=False).to_numpy(dtype=bool)
+    if segmento_mercado is not None:
+        mask &= _SEGMENT_NORM.eq(normalize_text(segmento_mercado)).to_numpy(dtype=bool)
+    if quartos_minimo is not None:
+        mask &= df["bedrooms"].ge(quartos_minimo).fillna(False).to_numpy(dtype=bool)
+    if aceita_financiamento is not None:
+        mask &= (
+            df["accepts_financing"]
+            .eq(bool(aceita_financiamento))
+            .fillna(False)
+            .to_numpy(dtype=bool)
+        )
+    return mask
 
 
 def _serialize_search_row(row: pd.Series) -> dict[str, Any]:
     """Serialize one row into the PT-BR summary schema returned by ``buscar_imoveis``."""
-    return _limpar_nulos(
+    return limpar_nulos(
         {
             "imovel_id": row["prop_id"],
             "fonte": row["source"],
+            "segmento_mercado": row["market_segment"],
             "titulo": row["title"],
             "tipo_imovel": row["prop_type"],
             "cidade": row["city"],
@@ -177,6 +114,7 @@ def _serialize_search_row(row: pd.Series) -> dict[str, Any]:
             "area_m2": row["area_m2"],
             "quartos": row["bedrooms"],
             "aceita_financiamento": row["accepts_financing"],
+            "status_financiamento": row["financing_status"],
             "p_vp_mercado": row["p_vp_mercado"],
         }
     )
@@ -184,10 +122,11 @@ def _serialize_search_row(row: pd.Series) -> dict[str, Any]:
 
 def _serialize_detail_row(row: pd.Series) -> dict[str, Any]:
     """Serialize one row into the full PT-BR detail schema."""
-    return _limpar_nulos(
+    return limpar_nulos(
         {
             "imovel_id": row["prop_id"],
             "fonte": row["source"],
+            "segmento_mercado": row["market_segment"],
             "codigo_externo": row["external_code"],
             "titulo": row["title"],
             "tipo_imovel": row["prop_type"],
@@ -200,11 +139,12 @@ def _serialize_detail_row(row: pd.Series) -> dict[str, Any]:
             "quartos": row["bedrooms"],
             "banheiros": row["bathrooms"],
             "vagas_garagem": row["garage_spots"],
-            "condominio_brl": row["condo_fee_brl"],
-            "iptu_brl": row["iptu_brl"],
             "modalidade_venda": row["sale_modality"],
             "aceita_financiamento": row["accepts_financing"],
+            "status_financiamento": row["financing_status"],
             "preco_por_m2_brl": row["price_per_m2"],
+            "preco_m2_mediano_referencia_brl": row["ref_m2_brl"],
+            "nivel_referencia_m2": row["ref_level"],
             "valor_patrimonial_estimado_brl": row["vp_estimado_brl"],
             "p_vp_mercado": row["p_vp_mercado"],
             "p_vp_caixa": row["p_vp_caixa"],
@@ -217,28 +157,31 @@ def _serialize_detail_row(row: pd.Series) -> dict[str, Any]:
 
 def _serialize_investment_row(row: pd.Series) -> dict[str, Any]:
     """Serialize one row into the PT-BR valuation and financing breakdown schema."""
-    return _limpar_nulos(
+    return limpar_nulos(
         {
             "imovel_id": row["prop_id"],
             "fonte": row["source"],
+            "segmento_mercado": row["market_segment"],
             "titulo": row["title"],
             "tipo_imovel": row["prop_type"],
             "cidade": row["city"],
             "bairro": row["neighborhood"],
             "modalidade_venda": row["sale_modality"],
             "aceita_financiamento": row["accepts_financing"],
+            "status_financiamento": row["financing_status"],
             "preco_brl": row["price_brl"],
             "valor_avaliacao_brl": row["appraisal_value_brl"],
             "desconto_pct": row["discount_pct"],
             "economia_desagio_brl": row["economia_brl"],
             "p_vp_caixa": row["p_vp_caixa"],
-            "status_avaliacao_caixa": _valuation_status(row["p_vp_caixa"]),
+            "status_avaliacao_caixa": valuation_status(row["p_vp_caixa"]),
             "area_m2": row["area_m2"],
             "preco_por_m2_brl": row["price_per_m2"],
-            "preco_m2_medio_regiao_brl": row["ref_m2_brl"],
+            "preco_m2_mediano_referencia_brl": row["ref_m2_brl"],
+            "nivel_referencia_m2": row["ref_level"],
             "valor_patrimonial_estimado_brl": row["vp_estimado_brl"],
             "p_vp_mercado": row["p_vp_mercado"],
-            "status_avaliacao_mercado": _valuation_status(row["p_vp_mercado"]),
+            "status_avaliacao_mercado": valuation_status(row["p_vp_mercado"]),
             "quartos": row["bedrooms"],
             "preco_por_quarto_brl": row["price_per_bedroom"],
             "entrada_20_pct_brl": row["entrada_20_pct_brl"],
@@ -264,6 +207,7 @@ def buscar_imoveis(
     cidade: str | None = None,
     bairro: str | None = None,
     fonte: str | None = None,
+    segmento_mercado: Literal["caixa", "imobiliaria"] | None = None,
     quartos_minimo: int | None = None,
     aceita_financiamento: bool | None = None,
     ordenar_por: Literal[
@@ -275,42 +219,28 @@ def buscar_imoveis(
     Parâmetros de filtro (todos opcionais):
     - ``preco_maximo``: preço máximo em reais (BRL).
     - ``tipo_imovel``: ``"casa"``, ``"apartamento"`` ou ``"terreno"``.
-    - ``cidade``: nome ou trecho da cidade (busca sem acentos e sem maiúsculas, ex.: "Mossoro").
-    - ``bairro``: nome ou trecho do bairro (busca sem acentos e sem maiúsculas).
+    - ``cidade``: nome ou trecho da cidade (sem acentos/maiúsculas, ex.: "Mossoro").
+    - ``bairro``: nome ou trecho do bairro (sem acentos/maiúsculas).
     - ``fonte``: origem/imobiliária do anúncio (ex.: "caixa", "pereseperes").
+    - ``segmento_mercado``: ``"caixa"`` ou ``"imobiliaria"``.
     - ``quartos_minimo``: quantidade mínima de quartos.
-    - ``aceita_financiamento``: ``True`` para imóveis financiáveis, ``False`` para não financiáveis.
+    - ``aceita_financiamento``: ``True`` para imóveis financiáveis, ``False`` para não.
     - ``ordenar_por``: ``"mais_barato"``, ``"maior_desconto"``, ``"maior_area"``,
       ``"menor_preco_m2"`` ou ``"menor_p_vp"``.
 
-    Retorna o total encontrado (``total_encontrados``) e os 5 primeiros imóveis em ``imoveis``.
+    Retorna ``total_encontrados`` e os 5 primeiros imóveis em ``imoveis``.
     Cite sempre o ``imovel_id`` (ex.: r001) de todo imóvel mencionado ao usuário.
     """
-    mask = np.ones(len(df), dtype=bool)
-    if preco_maximo is not None:
-        mask &= df["price_brl"].le(preco_maximo).fillna(False).to_numpy(dtype=bool)
-    if tipo_imovel is not None:
-        target_type = _normalize_text(tipo_imovel)
-        mask &= _TYPE_NORM.eq(target_type).to_numpy(dtype=bool)
-    if cidade is not None:
-        target_city = _normalize_text(cidade)
-        mask &= _CITY_NORM.str.contains(target_city, regex=False).to_numpy(dtype=bool)
-    if bairro is not None:
-        target_nb = _normalize_text(bairro)
-        mask &= _NEIGHBORHOOD_NORM.str.contains(target_nb, regex=False).to_numpy(dtype=bool)
-    if fonte is not None:
-        target_source = _normalize_text(fonte)
-        mask &= _SOURCE_NORM.str.contains(target_source, regex=False).to_numpy(dtype=bool)
-    if quartos_minimo is not None:
-        mask &= df["bedrooms"].ge(quartos_minimo).fillna(False).to_numpy(dtype=bool)
-    if aceita_financiamento is not None:
-        mask &= (
-            df["accepts_financing"]
-            .eq(bool(aceita_financiamento))
-            .fillna(False)
-            .to_numpy(dtype=bool)
-        )
-
+    mask = _filter_mask(
+        preco_maximo=preco_maximo,
+        tipo_imovel=tipo_imovel,
+        cidade=cidade,
+        bairro=bairro,
+        fonte=fonte,
+        segmento_mercado=segmento_mercado,
+        quartos_minimo=quartos_minimo,
+        aceita_financiamento=aceita_financiamento,
+    )
     sort_cols, ascending = SORT_SPECS.get(ordenar_por, SORT_SPECS["mais_barato"])
     filtered = df.loc[mask].sort_values(
         by=sort_cols, ascending=ascending, na_position="last", kind="mergesort"
@@ -325,9 +255,10 @@ def buscar_imoveis(
 def detalhes_imovel(imovel_id: str) -> dict[str, Any]:
     """Retorna todos os detalhes cadastrais e indicadores de valuation de um único imóvel.
 
-    Inclui cidade, bairro, fonte, modalidade de venda, elegibilidade a financiamento,
-    área em m², quartos, banheiros, vagas de garagem, avaliação oficial, percentual de
-    desconto, P/VP de mercado, P/VP Caixa, economia/deságio e preço por quarto.
+    Inclui cidade, bairro, fonte, segmento de mercado, modalidade de venda, status de
+    financiamento, área em m², quartos, banheiros, vagas de garagem, avaliação oficial,
+    percentual de desconto, referência mediana de R$/m² (e seu nível hierárquico),
+    P/VP de mercado, P/VP Caixa, economia/deságio e preço por quarto.
     Cite sempre o ``imovel_id`` na resposta.
     """
     clean_id = imovel_id.strip().lower()
@@ -343,7 +274,8 @@ def comparar_imoveis(imoveis_ids: list[str]) -> dict[str, Any]:
 
     Retorna os dados completos dos imóveis encontrados, o dicionário
     ``melhor_em_cada_criterio`` (com listas de ``imovel_id`` vencedores em cada métrica,
-    já tratando empates e valores ausentes) e ``nao_encontrados`` para códigos inexistentes.
+    usando P/VP mediano hierárquico e ignorando valores ausentes) e ``nao_encontrados``
+    para códigos inexistentes.
     """
     positions: list[int] = []
     seen_pos: set[int] = set()
@@ -377,10 +309,10 @@ def comparar_imoveis(imoveis_ids: list[str]) -> dict[str, Any]:
 def avaliar_investimento(imovel_id: str) -> dict[str, Any]:
     """Calcula a análise financeira completa e de financiamento de um único imóvel.
 
-    Retorna preço por m², preço médio regional de referência, Valor Patrimonial estimado,
-    índices P/VP Caixa e P/VP de mercado com classificação (``desagio``, ``agio`` ou
-    ``par``), economia absoluta em reais, preço por quarto, estimativa de entrada (20%)
-    e custos estimados de ITBI + registro (4,5%).
+    Retorna preço por m², mediana regional de referência (e seu nível hierárquico),
+    Valor Patrimonial estimado, índices P/VP Caixa e P/VP de mercado com classificação
+    (``desagio``, ``agio`` ou ``par``), economia absoluta em reais, preço por quarto,
+    estimativa de entrada (20%) e custos estimados de ITBI + registro (4,5%).
     """
     clean_id = imovel_id.strip().lower()
     pos = _ID_TO_POS.get(clean_id)
@@ -389,45 +321,290 @@ def avaliar_investimento(imovel_id: str) -> dict[str, Any]:
     return _serialize_investment_row(df.iloc[pos])
 
 
+@mcp.tool
+def simular_compra_financiamento(
+    imovel_id: str,
+    entrada_pct: float = 20.0,
+    prazo_meses: int = 360,
+    taxa_juros_anual_pct: float = 10.5,
+    sistema: Literal["SAC", "PRICE"] = "SAC",
+) -> dict[str, Any]:
+    """Simula compra financiada (SAC ou PRICE) ou à vista e custos cartoriais de um imóvel.
+
+    Parâmetros:
+    - ``imovel_id``: código do imóvel (ex.: ``"r047"``).
+    - ``entrada_pct``: percentual de entrada entre 0 (inclusive) e 100 (exclusive).
+    - ``prazo_meses``: prazo do financiamento entre 1 e 420 meses.
+    - ``taxa_juros_anual_pct``: taxa de juros nominal anual entre 0 e 35%.
+    - ``sistema``: sistema de amortização ``"SAC"`` ou ``"PRICE"``.
+
+    Verifica automaticamente se o imóvel aceita financiamento (``aceita_financiamento``) e
+    inclui estimativa de ITBI/registro (4,5%) e comissão de leiloeiro (5% quando aplicável).
+    """
+    if not (0.0 <= entrada_pct < 100.0):
+        return {"erro": "entrada_pct deve estar entre 0 (inclusive) e 100 (exclusive)."}
+    if not (1 <= prazo_meses <= 420):
+        return {"erro": "prazo_meses deve estar entre 1 e 420 meses."}
+    if not (0.0 <= taxa_juros_anual_pct <= 35.0):
+        return {"erro": "taxa_juros_anual_pct deve estar entre 0 e 35%."}
+    sistema_upper = str(sistema).strip().upper()
+    if sistema_upper not in ("SAC", "PRICE"):
+        return {"erro": "sistema deve ser 'SAC' ou 'PRICE'."}
+
+    clean_id = imovel_id.strip().lower()
+    pos = _ID_TO_POS.get(clean_id)
+    if pos is None:
+        return {"erro": f"Nenhum imóvel encontrado com o código {imovel_id}."}
+
+    row = df.iloc[pos]
+    preco = float(row["price_brl"])
+    itbi_registro_est_brl = round(preco * 0.045, 2)
+
+    source_norm = normalize_text(row["source"])
+    modality_norm = normalize_text(row["sale_modality"])
+    is_auction = source_norm == "caixa" and (
+        "leilao" in modality_norm or "licitacao" in modality_norm
+    )
+    comissao_leiloeiro_brl = round(preco * 0.05, 2) if is_auction else 0.0
+    custo_total_a_vista_brl = round(
+        preco + itbi_registro_est_brl + comissao_leiloeiro_brl, 2
+    )
+
+    accepts_fin = clean_value(row["accepts_financing"])
+    status_fin = str(row["financing_status"])
+
+    base_payload: dict[str, Any] = {
+        "imovel_id": row["prop_id"],
+        "fonte": row["source"],
+        "segmento_mercado": row["market_segment"],
+        "titulo": row["title"],
+        "cidade": row["city"],
+        "modalidade_venda": row["sale_modality"],
+        "preco_brl": round(preco, 2),
+        "itbi_registro_est_brl": itbi_registro_est_brl,
+        "comissao_leiloeiro_brl": comissao_leiloeiro_brl,
+        "custo_total_a_vista_brl": custo_total_a_vista_brl,
+        "aceita_financiamento": accepts_fin,
+        "status_financiamento": status_fin,
+    }
+
+    if accepts_fin is False:
+        return limpar_nulos(
+            {
+                **base_payload,
+                "financiamento_permitido": False,
+                "sistema": sistema_upper,
+                "entrada_pct": float(entrada_pct),
+                "prazo_meses": int(prazo_meses),
+                "taxa_juros_anual_pct": float(taxa_juros_anual_pct),
+                "valor_entrada_brl": None,
+                "valor_financiado_brl": None,
+                "desembolso_inicial_total_brl": None,
+                "primeira_parcela_brl": None,
+                "ultima_parcela_brl": None,
+                "total_juros_brl": None,
+                "total_pago_financiamento_brl": None,
+                "aviso": (
+                    "Este imóvel da Caixa NÃO aceita financiamento bancário; "
+                    "a compra deve ser feita integralmente com recursos próprios."
+                ),
+            }
+        )
+
+    valor_entrada_brl = round(preco * (entrada_pct / 100.0), 2)
+    valor_financiado_brl = round(preco - valor_entrada_brl, 2)
+    desembolso_inicial_total_brl = round(
+        valor_entrada_brl + itbi_registro_est_brl + comissao_leiloeiro_brl, 2
+    )
+    taxa_mensal = (taxa_juros_anual_pct / 100.0) / 12.0
+
+    if sistema_upper == "SAC":
+        amortizacao = valor_financiado_brl / prazo_meses
+        primeira_parcela_brl = round(amortizacao + valor_financiado_brl * taxa_mensal, 2)
+        ultima_parcela_brl = round(amortizacao + amortizacao * taxa_mensal, 2)
+        total_juros_brl = round(
+            valor_financiado_brl * taxa_mensal * (prazo_meses + 1) / 2.0, 2
+        )
+        total_pago_financiamento_brl = round(valor_financiado_brl + total_juros_brl, 2)
+    else:
+        if taxa_mensal > 0.0:
+            factor = (1.0 + taxa_mensal) ** prazo_meses
+            pmt = valor_financiado_brl * (taxa_mensal * factor) / (factor - 1.0)
+        else:
+            pmt = valor_financiado_brl / prazo_meses
+        primeira_parcela_brl = round(pmt, 2)
+        ultima_parcela_brl = round(pmt, 2)
+        total_pago_financiamento_brl = round(pmt * prazo_meses, 2)
+        total_juros_brl = round(total_pago_financiamento_brl - valor_financiado_brl, 2)
+
+    aviso = (
+        None
+        if accepts_fin is True
+        else (
+            "Simulação estimada: o anúncio da imobiliária não informa elegibilidade a "
+            "financiamento bancário; confirme diretamente com o anunciante."
+        )
+    )
+
+    return limpar_nulos(
+        {
+            **base_payload,
+            "financiamento_permitido": True,
+            "sistema": sistema_upper,
+            "entrada_pct": float(entrada_pct),
+            "prazo_meses": int(prazo_meses),
+            "taxa_juros_anual_pct": float(taxa_juros_anual_pct),
+            "valor_entrada_brl": valor_entrada_brl,
+            "valor_financiado_brl": valor_financiado_brl,
+            "desembolso_inicial_total_brl": desembolso_inicial_total_brl,
+            "primeira_parcela_brl": primeira_parcela_brl,
+            "ultima_parcela_brl": ultima_parcela_brl,
+            "total_juros_brl": total_juros_brl,
+            "total_pago_financiamento_brl": total_pago_financiamento_brl,
+            "aviso": aviso,
+        }
+    )
+
+
+@mcp.tool
+def estatisticas_mercado(
+    cidade: str | None = None,
+    bairro: str | None = None,
+    tipo_imovel: Literal["casa", "apartamento", "terreno"] | None = None,
+    fonte: str | None = None,
+    segmento_mercado: Literal["caixa", "imobiliaria"] | None = None,
+    aceita_financiamento: bool | None = None,
+) -> dict[str, Any]:
+    """Calcula estatísticas agregadas de mercado sobre TODO o estoque filtrado.
+
+    Ao contrário de ``buscar_imoveis`` (limitado aos 5 primeiros resultados), esta ferramenta
+    analisa todos os imóveis que atendem aos filtros informados e retorna contagens por
+    tipo e segmento, estatísticas de preço, preço por m² (incluindo mediana), área em m²,
+    descontos da Caixa e distribuição de elegibilidade a financiamento.
+    """
+    filtros_aplicados = limpar_nulos(
+        {
+            "cidade": cidade,
+            "bairro": bairro,
+            "tipo_imovel": tipo_imovel,
+            "fonte": fonte,
+            "segmento_mercado": segmento_mercado,
+            "aceita_financiamento": aceita_financiamento,
+        }
+    )
+    mask = _filter_mask(
+        tipo_imovel=tipo_imovel,
+        cidade=cidade,
+        bairro=bairro,
+        fonte=fonte,
+        segmento_mercado=segmento_mercado,
+        aceita_financiamento=aceita_financiamento,
+    )
+    sub = df.loc[mask]
+    if sub.empty:
+        return {
+            "filtros_aplicados": filtros_aplicados,
+            "total_imoveis": 0,
+            "mensagem": "Nenhum imóvel encontrado para os filtros informados.",
+        }
+
+    discounts = sub["discount_pct"].dropna()
+    discount_stats = (
+        {
+            "quantidade_com_desconto": int(len(discounts)),
+            "mediana": round(float(discounts.median()), 2),
+            "media": round(float(discounts.mean()), 2),
+            "maximo": round(float(discounts.max()), 2),
+        }
+        if not discounts.empty
+        else {
+            "quantidade_com_desconto": 0,
+            "mediana": None,
+            "media": None,
+            "maximo": None,
+        }
+    )
+
+    fin_series = sub["accepts_financing"]
+    por_tipo = {str(k): int(v) for k, v in sub["prop_type"].value_counts().items()}
+    por_segmento = {str(k): int(v) for k, v in sub["market_segment"].value_counts().items()}
+
+    return limpar_nulos(
+        {
+            "filtros_aplicados": filtros_aplicados,
+            "total_imoveis": int(len(sub)),
+            "por_tipo": por_tipo,
+            "por_segmento": por_segmento,
+            "preco_brl": {
+                "minimo": round(float(sub["price_brl"].min()), 2),
+                "mediana": round(float(sub["price_brl"].median()), 2),
+                "media": round(float(sub["price_brl"].mean()), 2),
+                "maximo": round(float(sub["price_brl"].max()), 2),
+            },
+            "preco_por_m2_brl": {
+                "minimo": round(float(sub["price_per_m2"].min()), 2),
+                "mediana": round(float(sub["price_per_m2"].median()), 2),
+                "media": round(float(sub["price_per_m2"].mean()), 2),
+                "maximo": round(float(sub["price_per_m2"].max()), 2),
+            },
+            "area_m2": {
+                "minimo": round(float(sub["area_m2"].min()), 2),
+                "mediana": round(float(sub["area_m2"].median()), 2),
+                "maximo": round(float(sub["area_m2"].max()), 2),
+            },
+            "desconto_caixa_pct": discount_stats,
+            "financiamento": {
+                "aceita_sim": int(fin_series.eq(True).fillna(False).sum()),
+                "aceita_nao": int(fin_series.eq(False).fillna(False).sum()),
+                "nao_informado": int(fin_series.isna().sum()),
+            },
+        }
+    )
+
+
 @mcp.resource("estoque://esquema")
 def catalog_schema() -> str:
-    """Retorna a documentação em português do esquema de campos e fórmulas de valuation."""
+    """Retorna a documentação em português do esquema de campos, ferramentas e valuation."""
     return (
         f"# Esquema do Estoque Real de Imóveis (RN) — {len(df)} Registros\n\n"
-        "## Campos Disponíveis (em português nas respostas das ferramentas)\n"
+        "## Ferramentas Disponíveis (6)\n"
+        "- `buscar_imoveis`: busca e filtra o estoque (retorna total e top 5).\n"
+        "- `detalhes_imovel`: ficha completa de um único `imovel_id`.\n"
+        "- `comparar_imoveis`: compara de 2 a 4 imóveis com vencedores por critério.\n"
+        "- `avaliar_investimento`: análise de P/VP (Caixa e mercado mediano), entrada e ITBI.\n"
+        "- `simular_compra_financiamento`: simula SAC/PRICE ou compra à vista com custos.\n"
+        "- `estatisticas_mercado`: agrega min/mediana/média/máx sobre todo o estoque filtrado.\n\n"
+        "## Campos Disponíveis (100% em português nas respostas)\n"
         "- `imovel_id` (str): Código identificador único no catálogo (ex.: 'r001').\n"
-        "- `fonte` (str): Origem do anúncio ('caixa' ou domínio da imobiliária local).\n"
-        "- `codigo_externo` (str): Código original na Caixa ou imobiliária.\n"
-        "- `titulo` (str): Título ou endereço resumido do anúncio.\n"
-        "- `tipo_imovel` (str): 'casa', 'apartamento' ou 'terreno'.\n"
-        "- `cidade` (str) e `bairro` (str): Localização no Rio Grande do Norte.\n"
-        "- `preco_brl` (float): Preço anunciado em reais (BRL).\n"
-        "- `valor_avaliacao_brl` (float | null): Avaliação oficial (disponível na Caixa).\n"
-        "- `desconto_pct` (float | null): Percentual de desconto oficial (Caixa).\n"
-        "- `area_m2` (float | null): Área em m².\n"
-        "- `quartos`, `banheiros`, `vagas_garagem` (int | null): Cômodos e vagas.\n"
-        "- `condominio_brl`, `iptu_brl` (float | null): Taxas quando informadas.\n"
-        "- `modalidade_venda` (str): Modalidade (ex.: 'Venda Online', 'Venda Padrão').\n"
-        "- `aceita_financiamento` (bool | null): Elegibilidade a financiamento.\n"
-        "- `url` (str): Link do anúncio original.\n\n"
+        "- `fonte` (str) e `segmento_mercado` ('caixa' | 'imobiliaria').\n"
+        "- `codigo_externo`, `titulo`, `tipo_imovel` ('casa' | 'apartamento' | 'terreno').\n"
+        "- `cidade` e `bairro`: Localização no Rio Grande do Norte.\n"
+        "- `preco_brl` (float): Preço anunciado em reais.\n"
+        "- `valor_avaliacao_brl` e `desconto_pct` (Caixa; null em imobiliárias).\n"
+        "- `area_m2` (float): Área em m² (100% preenchida).\n"
+        "- `quartos`, `banheiros`, `vagas_garagem` (int | null; 0 em terrenos).\n"
+        "- `modalidade_venda`, `aceita_financiamento` (bool | null) e "
+        "`status_financiamento` ('aceita' | 'nao_aceita' | 'nao_informado').\n"
+        "- `url`: Link do anúncio original.\n\n"
         "## Atributos NÃO Registrados no Catálogo\n"
-        "O catálogo NÃO possui informações sobre posição solar (nascente/poente), "
-        "poço artesiano, política de permuta ou aceitação de veículo usado como parte "
-        "do pagamento. Nunca invente esses dados.\n\n"
-        "## Fórmulas Determinísticas de Valuation\n"
-        "- `preco_por_m2_brl` = round(preco_brl / area_m2, 2) (se area_m2 > 0)\n"
-        "- `preco_m2_medio_regiao_brl` = média de preço/m² por (cidade, tipo_imovel) "
-        "(com fallback para média estadual de tipo_imovel)\n"
-        "- `valor_patrimonial_estimado_brl` = round(area_m2 * preco_m2_medio_regiao_brl, 2)\n"
+        "O catálogo NÃO registra valor de **condomínio**, valor de **IPTU**, "
+        "**posição solar** (nascente/poente), presença de **poço artesiano** nem "
+        "política de **permuta/troca por veículo**. Nunca invente esses dados.\n\n"
+        "## Metodologia de Valuation (Mediana Hierárquica em 4 Níveis, MIN_GROUP_SIZE=5)\n"
+        "- `preco_por_m2_brl` = round(preco_brl / area_m2, 2)\n"
+        "- `preco_m2_mediano_referencia_brl` (`nivel_referencia_m2`): mediana de R$/m² "
+        "do nível mais específico com ao menos 5 imóveis:\n"
+        "  1. `bairro_segmento`: (segmento_mercado, cidade, bairro, tipo_imovel)\n"
+        "  2. `cidade_segmento`: (segmento_mercado, cidade, tipo_imovel)\n"
+        "  3. `cidade_tipo`: (cidade, tipo_imovel)\n"
+        "  4. `estado_tipo`: mediana estadual por tipo_imovel\n"
+        "- `valor_patrimonial_estimado_brl` = round(area_m2 * preco_m2_mediano_referencia_brl, 2)\n"
         "- `p_vp_mercado` = round(preco_brl / valor_patrimonial_estimado_brl, 2) "
         "(< 1.0 = deságio, > 1.0 = ágio, 1.0 = par)\n"
-        "- `p_vp_caixa` = round(preco_brl / valor_avaliacao_brl, 2) "
-        "(se valor_avaliacao_brl > 0)\n"
-        "- `economia_desagio_brl` = round(valor_avaliacao_brl - preco_brl, 2) "
-        "(positivo = deságio/economia, negativo = ágio)\n"
-        "- `preco_por_quarto_brl` = round(preco_brl / quartos, 2) (se quartos > 0)\n"
-        "- `entrada_20_pct_brl` = round(preco_brl * 0.20, 2)\n"
-        "- `itbi_registro_est_brl` = round(preco_brl * 0.045, 2)\n"
+        "- `p_vp_caixa` = round(preco_brl / valor_avaliacao_brl, 2)\n"
+        "- `economia_desagio_brl` = round(valor_avaliacao_brl - preco_brl, 2)\n"
+        "- `entrada_20_pct_brl` = round(preco_brl * 0.20, 2) e "
+        "`itbi_registro_est_brl` = round(preco_brl * 0.045, 2)\n"
     )
 
 
@@ -443,11 +620,11 @@ def recomendar_imovel(
         f"Você é um consultor imobiliário especialista no Rio Grande do Norte. "
         f"Responda sempre em português do Brasil (PT-BR). Um cliente busca um imóvel "
         f"do tipo '{tipo_imovel}'{city_clause} com orçamento máximo de R$ {orcamento:,.2f}. "
-        f"Use `buscar_imoveis` para encontrar as melhores opções reais no estoque, "
-        f"utilize `comparar_imoveis` ou `avaliar_investimento` para comparar preços, "
-        f"área, desconto oficial, aceitação de financiamento e índice P/VP, cite "
-        f"obrigatoriamente o `imovel_id` de cada imóvel mencionado e nunca invente "
-        f"atributos ausentes."
+        f"Use `buscar_imoveis` e `estatisticas_mercado` para situar as melhores opções "
+        f"reais no estoque, utilize `comparar_imoveis`, `avaliar_investimento` ou "
+        f"`simular_compra_financiamento` para comparar preços, área, desconto oficial, "
+        f"elegibilidade a financiamento e índice P/VP mediano, cite obrigatoriamente o "
+        f"`imovel_id` de cada imóvel mencionado e nunca invente atributos ausentes."
     )
 
 

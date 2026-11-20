@@ -3,14 +3,18 @@
 
 from __future__ import annotations
 
-import math
 import re
-import unicodedata
+import sys
 from pathlib import Path
 from typing import Any, Literal
 
-import numpy as np
 import pandas as pd
+
+_REPO_ROOT = str(Path(__file__).resolve().parent.parent)
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
+from src.catalog import load_catalog, normalize_text  # noqa: E402
 
 SYSTEM_PROMPT_PTBR = (
     "Você é um assistente especialista em imóveis no Rio Grande do Norte (Natal e região). "
@@ -40,87 +44,7 @@ _ACCENT_CHAR_CLASS: dict[str, str] = {
     "c": "[cç]",
 }
 
-
-def _resolve_csv_path() -> Path:
-    """Resolve ``real_properties.csv`` from working directory or repository root."""
-    candidates = [
-        Path("data/real_properties.csv"),
-        Path("real_properties.csv"),
-        Path(__file__).resolve().parent.parent / "data" / "real_properties.csv",
-    ]
-    for path in candidates:
-        if path.is_file():
-            return path
-    raise FileNotFoundError(
-        "Could not locate data/real_properties.csv or real_properties.csv"
-    )
-
-
-def _normalize_text(value: Any) -> str:
-    """Return lowercase ASCII-folded text without accents or surrounding whitespace."""
-    if value is None:
-        return ""
-    if isinstance(value, float) and math.isnan(value):
-        return ""
-    if pd.isna(value):
-        return ""
-    folded = unicodedata.normalize("NFD", str(value).strip().lower())
-    return "".join(ch for ch in folded if unicodedata.category(ch) != "Mn")
-
-
-def _load_catalog() -> pd.DataFrame:
-    """Load ``real_properties.csv`` and compute the real-data valuation columns."""
-    catalog = pd.read_csv(_resolve_csv_path())
-    for int_col in ("bedrooms", "bathrooms", "garage_spots"):
-        catalog[int_col] = catalog[int_col].astype("Int64")
-    catalog["accepts_financing"] = catalog["accepts_financing"].astype("boolean")
-
-    area_vals = catalog["area_m2"].to_numpy(dtype=float, na_value=np.nan)
-    price_vals = catalog["price_brl"].to_numpy(dtype=float, na_value=np.nan)
-    area_pos = catalog["area_m2"].gt(0).fillna(False).to_numpy(dtype=bool)
-    catalog["price_per_m2"] = np.round(
-        np.divide(price_vals, area_vals, out=np.full_like(price_vals, np.nan), where=area_pos),
-        2,
-    )
-    group_ref_m2 = catalog.groupby(["city", "prop_type"])["price_per_m2"].transform("mean")
-    type_ref_m2 = catalog.groupby("prop_type")["price_per_m2"].transform("mean")
-    ref_m2_vals = np.where(
-        pd.notna(group_ref_m2),
-        np.asarray(group_ref_m2, dtype=float),
-        np.asarray(type_ref_m2, dtype=float),
-    )
-    catalog["ref_m2_brl"] = np.round(ref_m2_vals, 2)
-    catalog["vp_estimado_brl"] = (catalog["area_m2"] * catalog["ref_m2_brl"]).round(2)
-
-    vp_vals = catalog["vp_estimado_brl"].to_numpy(dtype=float, na_value=np.nan)
-    vp_pos = catalog["vp_estimado_brl"].gt(0).fillna(False).to_numpy(dtype=bool)
-    catalog["p_vp_mercado"] = np.round(
-        np.divide(price_vals, vp_vals, out=np.full_like(price_vals, np.nan), where=vp_pos),
-        2,
-    )
-
-    appr_vals = catalog["appraisal_value_brl"].to_numpy(dtype=float, na_value=np.nan)
-    appr_pos = catalog["appraisal_value_brl"].gt(0).fillna(False).to_numpy(dtype=bool)
-    catalog["p_vp_caixa"] = np.round(
-        np.divide(price_vals, appr_vals, out=np.full_like(price_vals, np.nan), where=appr_pos),
-        2,
-    )
-    catalog["economia_brl"] = (
-        catalog["appraisal_value_brl"] - catalog["price_brl"]
-    ).round(2)
-
-    bed_pos = catalog["bedrooms"].gt(0).fillna(False).to_numpy(dtype=bool)
-    bedrooms_float = catalog["bedrooms"].astype("Float64").to_numpy(dtype=float, na_value=np.nan)
-    catalog["price_per_bedroom"] = np.round(
-        np.divide(price_vals, bedrooms_float, out=np.full_like(price_vals, np.nan), where=bed_pos),
-        2,
-    )
-    catalog["entrada_20_pct_brl"] = (catalog["price_brl"] * 0.20).round(2)
-    catalog["itbi_registro_est_brl"] = (catalog["price_brl"] * 0.045).round(2)
-    return catalog
-
-
-df: pd.DataFrame = _load_catalog()
+df: pd.DataFrame = load_catalog()
 _BY_ID: dict[str, dict[str, Any]] = {
     str(row["prop_id"]).lower(): row.to_dict() for _, row in df.iterrows()
 }
@@ -185,7 +109,7 @@ def _fmt_brl(value: float | int) -> str:
 
 def _accent_flexible_re(text: str) -> str:
     """Build a regex matching ``text`` regardless of Portuguese diacritics."""
-    folded = _normalize_text(text)
+    folded = normalize_text(text)
     parts: list[str] = []
     for ch in folded:
         if ch in _ACCENT_CHAR_CLASS:
@@ -217,11 +141,42 @@ def _pick_distinct_pair(
     return None
 
 
+def _simulate_sac_values(
+    row: dict[str, Any],
+    entrada_pct: float = 30.0,
+    prazo_meses: int = 240,
+    taxa_anual_pct: float = 10.5,
+) -> dict[str, float]:
+    """Compute exact SAC simulation numbers matching ``simular_compra_financiamento``."""
+    preco = float(row["price_brl"])
+    itbi = round(preco * 0.045, 2)
+    source_norm = normalize_text(row["source"])
+    modality_norm = normalize_text(row["sale_modality"])
+    is_auction = source_norm == "caixa" and (
+        "leilao" in modality_norm or "licitacao" in modality_norm
+    )
+    comissao = round(preco * 0.05, 2) if is_auction else 0.0
+    valor_entrada = round(preco * (entrada_pct / 100.0), 2)
+    valor_financiado = round(preco - valor_entrada, 2)
+    desembolso_inicial = round(valor_entrada + itbi + comissao, 2)
+    taxa_mensal = (taxa_anual_pct / 100.0) / 12.0
+    amortizacao = valor_financiado / prazo_meses
+    primeira_parcela = round(amortizacao + valor_financiado * taxa_mensal, 2)
+    return {
+        "valor_entrada_brl": valor_entrada,
+        "valor_financiado_brl": valor_financiado,
+        "itbi_registro_est_brl": itbi,
+        "comissao_leiloeiro_brl": comissao,
+        "desembolso_inicial_total_brl": desembolso_inicial,
+        "primeira_parcela_brl": primeira_parcela,
+    }
+
+
 def _build_perguntas() -> list[dict[str, Any]]:
     """Construct the 20 PT-BR benchmark questions dynamically from ``df``."""
-    city_norm = pd.Series([_normalize_text(v) for v in df["city"]], index=df.index)
-    nb_norm = pd.Series([_normalize_text(v) for v in df["neighborhood"]], index=df.index)
-    source_norm = pd.Series([_normalize_text(v) for v in df["source"]], index=df.index)
+    city_norm = pd.Series([normalize_text(v) for v in df["city"]], index=df.index)
+    nb_norm = pd.Series([normalize_text(v) for v in df["neighborhood"]], index=df.index)
+    source_norm = pd.Series([normalize_text(v) for v in df["source"]], index=df.index)
 
     # Q1: Cheapest house in Natal up to R$ 350k
     q1_sub = df.loc[
@@ -318,38 +273,37 @@ def _build_perguntas() -> list[dict[str, Any]]:
     q11_area_win = a_q11 if a_q11["area_m2"] >= b_q11["area_m2"] else b_q11
     q11_ppm_win = a_q11 if a_q11["price_per_m2"] <= b_q11["price_per_m2"] else b_q11
 
-    # Q12: Property with area > 0 and p_vp_mercado < 0.85
+    # Q12: Property with p_vp_mercado < 0.85 and ref_level in ("bairro_segmento", "cidade_segmento")
     q12_sub = df.loc[
-        df["area_m2"].gt(0).fillna(False)
-        & df["p_vp_mercado"].gt(0).fillna(False)
+        df["p_vp_mercado"].gt(0.1).fillna(False)
         & df["p_vp_mercado"].lt(0.85).fillna(False)
+        & df["ref_level"].isin(["bairro_segmento", "cidade_segmento"])
     ].sort_values("prop_id", kind="mergesort")
     r_q12 = q12_sub.iloc[0].to_dict()
 
-    # Q13: Caixa property with discount_pct >= 30
+    # Q13: Caixa property with accepts_financing == True for SAC simulation (30% down, 240m, 10.5%)
     q13_sub = df.loc[
-        (source_norm == "caixa")
-        & df["discount_pct"].ge(30).fillna(False)
-        & df["appraisal_value_brl"].gt(0).fillna(False)
+        (source_norm == "caixa") & df["accepts_financing"].eq(True).fillna(False)
     ].sort_values("prop_id", kind="mergesort")
     r_q13 = q13_sub.iloc[0].to_dict()
+    sim13 = _simulate_sac_values(r_q13, entrada_pct=30.0, prazo_meses=240, taxa_anual_pct=10.5)
 
-    # Q14: 2 residential properties where A has lower p_vp_mercado and B has lower price_per_bedroom
-    q14_sub = df.loc[
-        df["prop_type"].isin(["casa", "apartamento"])
-        & df["bedrooms"].gt(0).fillna(False)
-        & df["p_vp_mercado"].gt(0).fillna(False)
-        & df["price_per_bedroom"].notna()
-    ]
-    pair14 = _pick_distinct_pair(q14_sub, "p_vp_mercado", "min", "price_per_bedroom", "min")
-    assert pair14 is not None, "Não foi possível encontrar par distinto para Q14"
-    a_q14, b_q14 = pair14
+    # Q14: Market stats comparison for casas in Natal vs. Parnamirim
+    natal_casas = df.loc[(df["prop_type"] == "casa") & (city_norm == "natal")]
+    parn_casas = df.loc[(df["prop_type"] == "casa") & (city_norm == "parnamirim")]
+    natal_cnt = int(len(natal_casas))
+    parn_cnt = int(len(parn_casas))
+    natal_med_ppm = round(float(natal_casas["price_per_m2"].median()), 2)
+    parn_med_ppm = round(float(parn_casas["price_per_m2"].median()), 2)
+    more_casas_city = "Natal" if natal_cnt >= parn_cnt else "Parnamirim"
+    cheaper_m2_city = "Parnamirim" if parn_med_ppm <= natal_med_ppm else "Natal"
+    cheaper_m2_val = min(natal_med_ppm, parn_med_ppm)
 
-    # Q15: 2 terrains with area_m2 > 0 (prefer distinct winners on price_per_m2 vs p_vp_mercado)
+    # Q15: 2 terrains with distinct winners on price_per_m2 vs p_vp_mercado
     q15_sub = df.loc[
         (df["prop_type"] == "terreno")
         & df["area_m2"].gt(0).fillna(False)
-        & df["p_vp_mercado"].gt(0).fillna(False)
+        & df["p_vp_mercado"].gt(0.1).fillna(False)
     ].sort_values("prop_id", kind="mergesort")
     pair15 = _pick_distinct_pair(q15_sub, "price_per_m2", "min", "p_vp_mercado", "min")
     if pair15 is not None:
@@ -359,10 +313,12 @@ def _build_perguntas() -> list[dict[str, Any]]:
     q15_ppm_win = a_q15 if a_q15["price_per_m2"] <= b_q15["price_per_m2"] else b_q15
     q15_pvp_win = a_q15 if a_q15["p_vp_mercado"] <= b_q15["p_vp_mercado"] else b_q15
 
-    # Q16: Financing trap in Ceará-Mirim (fallback: Mossoró)
+    # Q16: Financing simulation trap (Ceará-Mirim or Mossoró)
     q16_pair: tuple[dict[str, Any], dict[str, Any]] | None = None
     for city_key in ("ceara-mirim", "mossoro"):
-        sub_city = df.loc[(df["prop_type"] == "casa") & (city_norm == city_key)]
+        sub_city = df.loc[
+            (source_norm == "caixa") & (df["prop_type"] == "casa") & (city_norm == city_key)
+        ]
         no_fin_df = sub_city.loc[sub_city["accepts_financing"].eq(False).fillna(False)].sort_values(
             "price_brl", kind="mergesort"
         )
@@ -377,6 +333,9 @@ def _build_perguntas() -> list[dict[str, Any]]:
                 break
     assert q16_pair is not None, "Não foi possível montar pegadinha de financiamento (Q16)"
     no_fin_16, yes_fin_16 = q16_pair
+    sim16_yes = _simulate_sac_values(
+        yes_fin_16, entrada_pct=20.0, prazo_meses=300, taxa_anual_pct=10.5
+    )
 
     # Q17: Caixa ágio trap (price_brl > appraisal_value_brl), preferring Parnamirim
     q17_all = df.loc[
@@ -392,7 +351,12 @@ def _build_perguntas() -> list[dict[str, Any]]:
     # Q19 & Q20 dynamic valid targets
     a_q19, b_q19 = a_q10, b_q10
     cheapest_19 = a_q19 if a_q19["price_brl"] <= b_q19["price_brl"] else b_q19
-    r_q20 = r_q5
+    r_q20 = (
+        df.loc[df["prop_type"] == "apartamento"]
+        .sort_values("prop_id", kind="mergesort")
+        .iloc[0]
+        .to_dict()
+    )
 
     return [
         {
@@ -624,7 +588,7 @@ def _build_perguntas() -> list[dict[str, Any]]:
             "q": (
                 f"Calcule o preço por m², o Valor Patrimonial estimado de mercado e o índice "
                 f"P/VP de mercado do imóvel {r_q12['prop_id']}. Ele está sendo negociado "
-                f"com ágio ou deságio em relação à média da cidade?"
+                f"com ágio ou deságio em relação à mediana regional?"
             ),
             "ferramenta": "avaliar_investimento|detalhes_imovel",
             "deve": [
@@ -634,58 +598,63 @@ def _build_perguntas() -> list[dict[str, Any]]:
                 r"des[áa]gio|abaixo",
             ],
             "gabarito": (
-                f"Para o imóvel {r_q12['prop_id']} ({r_q12['city']}, {r_q12['prop_type']}): "
-                f"preço por m² = R$ {_fmt_brl(r_q12['price_per_m2'])}/m², Valor Patrimonial "
-                f"estimado de mercado = R$ {_fmt_brl(r_q12['vp_estimado_brl'])} e índice P/VP "
-                f"de mercado = {r_q12['p_vp_mercado']}. Como P/VP < 1,0, está sendo "
-                f"negociado com deságio (abaixo da média da cidade)."
+                f"Para o imóvel {r_q12['prop_id']} ({r_q12['city']}, {r_q12['prop_type']}, "
+                f"referência mediano nível '{r_q12['ref_level']}' = "
+                f"R$ {_fmt_brl(r_q12['ref_m2_brl'])}/m²): preço por m² = "
+                f"R$ {_fmt_brl(r_q12['price_per_m2'])}/m², Valor Patrimonial estimado de "
+                f"mercado = R$ {_fmt_brl(r_q12['vp_estimado_brl'])} e índice P/VP de mercado "
+                f"= {r_q12['p_vp_mercado']}. Como P/VP < 1,0, está sendo negociado com "
+                f"deságio em relação à mediana regional."
             ),
         },
         {
             "id": 13,
             "categoria": "calculo_financeiro",
             "q": (
-                f"Para o imóvel {r_q13['prop_id']} da Caixa, qual é o índice P/VP em relação "
-                f"à avaliação oficial do banco, qual a economia absoluta em reais (deságio) "
-                f"e quanto seria uma entrada de 20%?"
+                f"Simule o financiamento do imóvel {r_q13['prop_id']} pelo sistema SAC com "
+                f"entrada de 30%, prazo de 240 meses e juros de 10,5% ao ano. Qual será o "
+                f"valor financiado, a primeira parcela e o desembolso inicial total "
+                f"(incluindo ITBI/registro)?"
             ),
-            "ferramenta": "avaliar_investimento|detalhes_imovel",
+            "ferramenta": "simular_compra_financiamento",
             "deve": [
-                num(r_q13["p_vp_caixa"]),
-                brl_re(r_q13["economia_brl"]),
-                brl_re(r_q13["entrada_20_pct_brl"]),
+                r_q13["prop_id"],
+                brl_re(sim13["valor_financiado_brl"]),
+                brl_re(sim13["primeira_parcela_brl"]),
+                brl_re(sim13["desembolso_inicial_total_brl"]),
             ],
             "gabarito": (
-                f"Para o imóvel {r_q13['prop_id']} ({r_q13['city']}, preço "
-                f"R$ {_fmt_brl(r_q13['price_brl'])}, avaliação oficial "
-                f"R$ {_fmt_brl(r_q13['appraisal_value_brl'])}): o índice P/VP Caixa é "
-                f"{r_q13['p_vp_caixa']}, a economia absoluta (deságio) é de "
-                f"R$ {_fmt_brl(r_q13['economia_brl'])} e uma entrada de 20% equivale a "
-                f"R$ {_fmt_brl(r_q13['entrada_20_pct_brl'])}."
+                f"Simulação SAC para {r_q13['prop_id']} ({r_q13['city']}, preço "
+                f"R$ {_fmt_brl(r_q13['price_brl'])}): entrada de 30% = "
+                f"R$ {_fmt_brl(sim13['valor_entrada_brl'])}, valor financiado = "
+                f"R$ {_fmt_brl(sim13['valor_financiado_brl'])}, primeira parcela SAC = "
+                f"R$ {_fmt_brl(sim13['primeira_parcela_brl'])}, ITBI/registro estimado = "
+                f"R$ {_fmt_brl(sim13['itbi_registro_est_brl'])} e desembolso inicial total "
+                f"= R$ {_fmt_brl(sim13['desembolso_inicial_total_brl'])}."
             ),
         },
         {
             "id": 14,
             "categoria": "calculo_financeiro",
             "q": (
-                f"Compare os indicadores de valuation dos imóveis {a_q14['prop_id']} e "
-                f"{b_q14['prop_id']}: qual possui o menor P/VP de mercado e qual tem o "
-                f"menor custo por quarto?"
+                "Compare as estatísticas de mercado de casas em Natal e em Parnamirim: "
+                "qual cidade tem mais casas cadastradas e qual apresenta a menor mediana de "
+                "preço por m²?"
             ),
-            "ferramenta": "comparar_imoveis|avaliar_investimento|detalhes_imovel",
+            "ferramenta": "estatisticas_mercado",
             "deve": [
-                a_q14["prop_id"],
-                num(a_q14["p_vp_mercado"]),
-                b_q14["prop_id"],
-                brl_re(b_q14["price_per_bedroom"]),
+                "Natal",
+                str(natal_cnt),
+                "Parnamirim",
+                brl_re(cheaper_m2_val),
             ],
             "gabarito": (
-                f"Entre {a_q14['prop_id']} e {b_q14['prop_id']}: o {a_q14['prop_id']} possui "
-                f"o menor P/VP de mercado ({a_q14['p_vp_mercado']} contra "
-                f"{b_q14['p_vp_mercado']} do {b_q14['prop_id']}), enquanto o "
-                f"{b_q14['prop_id']} tem o menor custo por quarto "
-                f"(R$ {_fmt_brl(b_q14['price_per_bedroom'])}/quarto contra "
-                f"R$ {_fmt_brl(a_q14['price_per_bedroom'])}/quarto)."
+                f"Nas estatísticas de mercado de casas: Natal possui {natal_cnt} casas "
+                f"cadastradas (mediana de R$ {_fmt_brl(natal_med_ppm)}/m²) contra "
+                f"{parn_cnt} casas em Parnamirim (mediana de "
+                f"R$ {_fmt_brl(parn_med_ppm)}/m²). Portanto, {more_casas_city} tem mais "
+                f"casas cadastradas e {cheaper_m2_city} apresenta a menor mediana de preço "
+                f"por m² (R$ {_fmt_brl(cheaper_m2_val)}/m²)."
             ),
         },
         {
@@ -716,23 +685,28 @@ def _build_perguntas() -> list[dict[str, Any]]:
             "id": 16,
             "categoria": "pegadinha",
             "q": (
-                f"Preciso comprar uma casa em {yes_fin_16['city']} usando financiamento "
-                f"bancário e estou em dúvida entre {no_fin_16['prop_id']} "
-                f"(por R$ {_fmt_brl(no_fin_16['price_brl'])}) e {yes_fin_16['prop_id']} "
-                f"(por R$ {_fmt_brl(yes_fin_16['price_brl'])}). Qual dos dois devo escolher "
-                f"para financiar pagando menos?"
+                f"Simule o financiamento (20% de entrada em 300 meses) para a casa mais "
+                f"barata de {yes_fin_16['city']} ({no_fin_16['prop_id']}, "
+                f"R$ {_fmt_brl(no_fin_16['price_brl'])}) e compare com "
+                f"{yes_fin_16['prop_id']} (R$ {_fmt_brl(yes_fin_16['price_brl'])}). "
+                f"Posso financiar a mais barata ou qual devo escolher?"
             ),
-            "ferramenta": "comparar_imoveis|avaliar_investimento|detalhes_imovel",
+            "ferramenta": "simular_compra_financiamento|comparar_imoveis|detalhes_imovel",
             "deve": [
                 yes_fin_16["prop_id"],
-                r"n[ãa]o (?:aceita|financi|é financi|permite)|sem financiamento|imposs[íi]vel",
+                (
+                    r"n[ãa]o (?:aceita|financi|é financi|permite)"
+                    r"|sem financiamento|recursos pr[óo]prios|imposs[íi]vel"
+                ),
             ],
             "gabarito": (
-                f"Pegadinha de financiamento: embora a casa {no_fin_16['prop_id']} seja mais "
-                f"barata (R$ {_fmt_brl(no_fin_16['price_brl'])}), ela não aceita "
-                f"financiamento bancário. Assim, a {yes_fin_16['prop_id']} "
-                f"(R$ {_fmt_brl(yes_fin_16['price_brl'])}) é a única escolha viável para "
-                f"financiar."
+                f"Pegadinha de financiamento: a casa {no_fin_16['prop_id']} "
+                f"(R$ {_fmt_brl(no_fin_16['price_brl'])}) NÃO aceita financiamento bancário "
+                f"(financiamento_permitido=False), exigindo compra à vista com recursos "
+                f"próprios. Assim, para financiar com 20% de entrada em 300 meses, você "
+                f"deve escolher a {yes_fin_16['prop_id']} "
+                f"(R$ {_fmt_brl(yes_fin_16['price_brl'])}, primeira parcela SAC aproximada "
+                f"de R$ {_fmt_brl(sim16_yes['primeira_parcela_brl'])})."
             ),
         },
         {
@@ -799,9 +773,8 @@ def _build_perguntas() -> list[dict[str, Any]]:
             "id": 20,
             "categoria": "fora_do_escopo",
             "q": (
-                f"Qual é a posição solar (nascente/poente), se possui poço artesiano e se "
-                f"o proprietário do imóvel {r_q20['prop_id']} aceita um carro usado como "
-                f"parte do pagamento?"
+                f"Qual é o valor mensal do condomínio, o valor do IPTU anual e a posição "
+                f"solar (nascente/poente) do apartamento {r_q20['prop_id']}?"
             ),
             "ferramenta": "detalhes_imovel",
             "deve": [
@@ -809,10 +782,10 @@ def _build_perguntas() -> list[dict[str, Any]]:
                 r"n[ãa]o (consta|inform|possui|registr|dispon|tem|há|ha)",
             ],
             "gabarito": (
-                f"O catálogo não registra posição solar, presença de poço artesiano nem "
-                f"política de permuta ou aceitação de carro usado como parte do pagamento. "
-                f"Para o imóvel {r_q20['prop_id']} ({r_q20['city']}, {r_q20['neighborhood']}), "
-                f"constam apenas os dados cadastrais e de avaliação disponíveis no estoque."
+                f"O catálogo não registra valor de condomínio, valor de IPTU anual nem "
+                f"posição solar (nascente/poente). Para o apartamento {r_q20['prop_id']} "
+                f"({r_q20['city']}, {r_q20['neighborhood']}), constam apenas os dados "
+                f"cadastrais e de valuation disponíveis no estoque."
             ),
         },
     ]
@@ -885,8 +858,8 @@ def _check_cited_ids_against_filters(
                 f"> max_price={filtros['max_price']}"
             )
         if "city" in filtros:
-            expected_city = _normalize_text(filtros["city"])
-            actual_city = _normalize_text(row["city"])
+            expected_city = normalize_text(filtros["city"])
+            actual_city = normalize_text(row["city"])
             if expected_city not in actual_city and actual_city != expected_city:
                 errors.append(
                     f"violacao_filtro: {pid} fica em {row['city']!r} "
@@ -894,7 +867,7 @@ def _check_cited_ids_against_filters(
                 )
         if "min_bedrooms" in filtros:
             beds = row.get("bedrooms")
-            if beds is None or pd.isna(beds) or int(beds) < int(filtros["min_bedrooms"]):
+            if beds is None or bool(pd.isna(beds)) or int(beds) < int(filtros["min_bedrooms"]):
                 errors.append(
                     f"violacao_filtro: {pid} tem bedrooms={beds!r} "
                     f"(< {filtros['min_bedrooms']})"
@@ -902,7 +875,7 @@ def _check_cited_ids_against_filters(
         if "accepts_financing" in filtros:
             fin = row.get("accepts_financing")
             expected_fin = bool(filtros["accepts_financing"])
-            if fin is None or pd.isna(fin) or bool(fin) != expected_fin:
+            if fin is None or bool(pd.isna(fin)) or bool(fin) != expected_fin:
                 errors.append(
                     f"violacao_filtro: {pid} tem accepts_financing={fin!r} "
                     f"(esperado {expected_fin!r})"
@@ -948,7 +921,7 @@ def checagem_automatica(
 def main() -> None:
     """Print a summary table of all 20 PT-BR benchmark questions and run self-checks."""
     assert len(PERGUNTAS) == 20, f"Expected 20 questions, got {len(PERGUNTAS)}"
-    header = f"{'ID':>2} | {'Categoria':<20} | {'Ferramenta':<54} | {'Gabarito (110 chars)'}"
+    header = f"{'ID':>2} | {'Categoria':<20} | {'Ferramenta':<56} | {'Gabarito (110 chars)'}"
     print(header)
     print("-" * len(header))
     for item in PERGUNTAS:
@@ -956,7 +929,7 @@ def main() -> None:
         cat = item["categoria"]
         tool = item["ferramenta"]
         gab_preview = item["gabarito"][:110]
-        print(f"{qid:>2} | {cat:<20} | {tool:<54} | {gab_preview}")
+        print(f"{qid:>2} | {cat:<20} | {tool:<56} | {gab_preview}")
 
         primary_tool = tool.split("|")[0]
         synthetic_trace = {

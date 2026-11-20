@@ -160,8 +160,6 @@ class RawProperty:
     bedrooms: int | None = None
     bathrooms: int | None = None
     garage_spots: int | None = None
-    condo_fee_brl: float | None = None
-    iptu_brl: float | None = None
     sale_modality: str = ""
     accepts_financing: bool | None = None
     url: str = ""
@@ -368,7 +366,7 @@ def detect_city_and_neighborhood(
 
 
 def extract_metrics_from_text(text: str, prop_type: str | None = None) -> dict[str, Any]:
-    """Extracts area_m2, bedrooms, bathrooms, garage_spots, condo_fee_brl, iptu_brl."""
+    """Extracts area_m2, bedrooms, bathrooms, and garage_spots."""
     clean = " ".join(text.replace("-", " ").split())
 
     # 1. Area in m2 (prefer área privativa -> área total/útil/construída -> área do terreno -> m2)
@@ -391,10 +389,14 @@ def extract_metrics_from_text(text: str, prop_type: str | None = None) -> dict[s
         if area is not None:
             break
 
-    # 2. Bedrooms (0 for terreno)
+    # 2. Bedrooms, bathrooms, and garage spots (domain-fact 0 for terreno; NA otherwise)
     bedrooms: int | None = None
+    bathrooms: int | None = None
+    garage: int | None = None
     if prop_type == "terreno":
         bedrooms = 0
+        bathrooms = 0
+        garage = 0
     else:
         m_bed = re.search(
             r"\b(\d{1,2})\s*(?:quartos?|dormit[óo]rios?|qto(?:\(s\))?s?|su[íi]tes?)\b"
@@ -406,54 +408,29 @@ def extract_metrics_from_text(text: str, prop_type: str | None = None) -> dict[s
             b_str = m_bed.group(1) or m_bed.group(2)
             bedrooms = int(b_str)
 
-    # 3. Bathrooms
-    bathrooms: int | None = None
-    m_bath = re.search(
-        r"\b(\d{1,2})\s*(?:banheiros?|wc|bwc|ban\.)\b",
-        clean,
-        flags=re.IGNORECASE,
-    )
-    if m_bath:
-        bathrooms = int(m_bath.group(1))
-    elif re.search(r"\bwc\b", clean, flags=re.IGNORECASE):
-        bathrooms = 1
+        m_bath = re.search(
+            r"\b(\d{1,2})\s*(?:banheiros?|wc|bwc|ban\.)\b",
+            clean,
+            flags=re.IGNORECASE,
+        )
+        if m_bath:
+            bathrooms = int(m_bath.group(1))
+        elif re.search(r"\bwc\b", clean, flags=re.IGNORECASE):
+            bathrooms = 1
 
-    # 4. Garage spots
-    garage: int | None = None
-    m_gar = re.search(
-        r"\b(\d{1,2})\s*(?:vaga(?:\(s\))?s?(?:\s*de\s*garagem)?|garagens?)\b",
-        clean,
-        flags=re.IGNORECASE,
-    )
-    if m_gar:
-        garage = int(m_gar.group(1))
-
-    # 5. Condomínio & IPTU
-    condo: float | None = None
-    m_condo = re.search(
-        r"cond(?:om[íi]nio)?\.?\s*[:•-]?\s*R\$\s*([\d\.,]+)",
-        clean,
-        flags=re.IGNORECASE,
-    )
-    if m_condo:
-        condo = parse_brl_number(m_condo.group(1))
-
-    iptu: float | None = None
-    m_iptu = re.search(
-        r"iptu\.?\s*[:•-]?\s*R\$\s*([\d\.,]+)",
-        clean,
-        flags=re.IGNORECASE,
-    )
-    if m_iptu:
-        iptu = parse_brl_number(m_iptu.group(1))
+        m_gar = re.search(
+            r"\b(\d{1,2})\s*(?:vaga(?:\(s\))?s?(?:\s*de\s*garagem)?|garagens?)\b",
+            clean,
+            flags=re.IGNORECASE,
+        )
+        if m_gar:
+            garage = int(m_gar.group(1))
 
     return {
         "area_m2": area,
         "bedrooms": bedrooms,
         "bathrooms": bathrooms,
         "garage_spots": garage,
-        "condo_fee_brl": condo,
-        "iptu_brl": iptu,
     }
 
 
@@ -551,8 +528,6 @@ class CaixaScraper:
             bedrooms=metrics["bedrooms"],
             bathrooms=metrics["bathrooms"],
             garage_spots=metrics["garage_spots"],
-            condo_fee_brl=metrics["condo_fee_brl"],
-            iptu_brl=metrics["iptu_brl"],
             sale_modality=modality or "Venda Caixa",
             accepts_financing=accepts_financing,
             url=link,
@@ -796,8 +771,6 @@ class AgencyScraper:
             bedrooms=metrics["bedrooms"],
             bathrooms=metrics["bathrooms"],
             garage_spots=metrics["garage_spots"],
-            condo_fee_brl=metrics["condo_fee_brl"],
-            iptu_brl=metrics["iptu_brl"],
             sale_modality="Venda Padrão",
             url=urljoin(page_url, str(node.get("url") or page_url)),
         )
@@ -912,8 +885,6 @@ class AgencyScraper:
             bedrooms=metrics["bedrooms"],
             bathrooms=metrics["bathrooms"],
             garage_spots=metrics["garage_spots"],
-            condo_fee_brl=metrics["condo_fee_brl"],
-            iptu_brl=metrics["iptu_brl"],
             sale_modality="Venda Padrão",
             url=link,
         )
@@ -1031,8 +1002,8 @@ class AgencyScraper:
             if metrics["area_m2"] is not None:
                 it.area_m2 = metrics["area_m2"]
                 filled += 1
-            for attr in ("bedrooms", "bathrooms", "garage_spots", "condo_fee_brl", "iptu_brl"):
-                if attr == "bedrooms" and it.prop_type == "terreno":
+            for attr in ("bedrooms", "bathrooms", "garage_spots"):
+                if it.prop_type == "terreno":
                     continue
                 if getattr(it, attr) is None and metrics[attr] is not None:
                     setattr(it, attr, metrics[attr])
@@ -1085,25 +1056,21 @@ class AgencyScraper:
         return all_items
 
 
-def load_agencies_from_csv(csv_path: str | Path) -> list[RawProperty]:
-    """Loads existing non-Caixa rows (source != "caixa") from a CSV as RawProperty objects.
-
-    Used by --agencies-csv for fast, reproducible offline merges instead of re-scraping
-    the live agency websites. Missing columns (e.g. accepts_financing in older snapshots)
-    are left as None / empty. Raises ScrapeError for unreadable files; malformed rows are
-    skipped with a warning.
-    """
+def _rows_from_csv(csv_path: str | Path, *, exclude_caixa: bool) -> list[RawProperty]:
+    """Load listings from a CSV into RawProperty objects (optionally skipping Caixa rows)."""
+    flag_name = "--agencies-csv" if exclude_caixa else "--clean-existing"
     try:
         df = pd.read_csv(csv_path)
     except FileNotFoundError as e:
-        raise ScrapeError(f"--agencies-csv não encontrado: {csv_path}") from e
+        raise ScrapeError(f"{flag_name} não encontrado: {csv_path}") from e
     except (pd.errors.EmptyDataError, pd.errors.ParserError, UnicodeDecodeError) as e:
-        raise ScrapeError(f"--agencies-csv ilegível ({csv_path}): {type(e).__name__}: {e}") from e
+        raise ScrapeError(f"{flag_name} ilegível ({csv_path}): {type(e).__name__}: {e}") from e
     except OSError as e:
-        raise ScrapeError(f"--agencies-csv inacessível ({csv_path}): {e}") from e
+        raise ScrapeError(f"{flag_name} inacessível ({csv_path}): {e}") from e
     if "source" not in df.columns:
         raise ScrapeError(f"{csv_path}: coluna 'source' ausente; não é um CSV de imóveis válido.")
-    df = df[df["source"].astype(str).str.strip().str.lower() != "caixa"]
+    if exclude_caixa:
+        df = df[df["source"].astype(str).str.strip().str.lower() != "caixa"]
 
     def _str(row: pd.Series, col: str) -> str:
         val = row.get(col)
@@ -1149,8 +1116,6 @@ def load_agencies_from_csv(csv_path: str | Path) -> list[RawProperty]:
                     bedrooms=_int(row, "bedrooms"),
                     bathrooms=_int(row, "bathrooms"),
                     garage_spots=_int(row, "garage_spots"),
-                    condo_fee_brl=_float(row, "condo_fee_brl"),
-                    iptu_brl=_float(row, "iptu_brl"),
                     sale_modality=_str(row, "sale_modality"),
                     accepts_financing=_bool(row, "accepts_financing"),
                     url=_str(row, "url"),
@@ -1159,15 +1124,28 @@ def load_agencies_from_csv(csv_path: str | Path) -> list[RawProperty]:
         except (ValueError, TypeError) as e:
             skipped += 1
             log.warning(
-                "[Agências] Linha %d de %s ignorada (%s: %s).",
+                "[CSV] Linha %d de %s ignorada (%s: %s).",
                 idx,
                 csv_path,
                 type(e).__name__,
                 e,
             )
     if skipped:
-        log.warning("[Agências] %d linha(s) inválida(s) ignorada(s) em %s.", skipped, csv_path)
+        log.warning("[CSV] %d linha(s) inválida(s) ignorada(s) em %s.", skipped, csv_path)
+    return items
+
+
+def load_agencies_from_csv(csv_path: str | Path) -> list[RawProperty]:
+    """Loads existing non-Caixa rows (source != "caixa") from a CSV as RawProperty objects."""
+    items = _rows_from_csv(csv_path, exclude_caixa=True)
     print(f"[Agências] {len(items)} imóveis não-Caixa carregados de {csv_path} (modo offline).")
+    return items
+
+
+def load_all_from_csv(csv_path: str | Path) -> list[RawProperty]:
+    """Loads all property rows from an existing merged CSV for deterministic offline cleaning."""
+    items = _rows_from_csv(csv_path, exclude_caixa=False)
+    print(f"[Limpeza] {len(items)} imóveis carregados de {csv_path} (modo offline).")
     return items
 
 
@@ -1186,6 +1164,10 @@ def _invalid_reason(item: RawProperty) -> str | None:
         return "preço ausente/inválido"
     if price > 50_000_000:
         return "preço implausível (> R$ 50 mi)"
+    if item.area_m2 is None or pd.isna(item.area_m2) or item.area_m2 <= 0:
+        return "area_m2 ausente ou <= 0"
+    if not (15 <= item.area_m2 <= 500000):
+        return "area_m2 fora de [15, 500000]"
     if item.source == "caixa":
         return None
     if detect_foreign_state(item.title):
@@ -1200,23 +1182,17 @@ def _invalid_reason(item: RawProperty) -> str | None:
 
 
 def sanitize_items(items: list[RawProperty]) -> list[RawProperty]:
-    """Drops invalid rows and nulls implausible areas, logging a summary by reason."""
+    """Drops invalid rows (including missing/invalid area_m2), logging counts by reason."""
     kept: list[RawProperty] = []
     dropped: Counter[str] = Counter()
-    bad_area = 0
     for item in items:
         reason = _invalid_reason(item)
         if reason:
             dropped[reason] += 1
             continue
-        if item.area_m2 is not None and not (15 <= item.area_m2 <= 500000):
-            item.area_m2 = None
-            bad_area += 1
         kept.append(item)
     for reason, n in dropped.items():
         log.warning("[Validação] %d linha(s) descartada(s): %s", n, reason)
-    if bad_area:
-        log.warning("[Validação] %d área(s) fora de [15, 500000] m² zerada(s).", bad_area)
     return kept
 
 
@@ -1303,14 +1279,28 @@ def finalize_and_save(items: list[RawProperty], output_path: str) -> pd.DataFram
 
     df = deduplicate_listings(pd.DataFrame([asdict(x) for x in items]))
 
-    # Land has no bedrooms: enforce 0 for every terreno row (scraped or loaded from CSV)
-    df.loc[df["prop_type"] == "terreno", "bedrooms"] = 0
+    # Enforce 100% valid area_m2 coverage after deduplication as well
+    valid_area = df["area_m2"].gt(0).fillna(False).to_numpy(dtype=bool)
+    dropped_area = int((~valid_area).sum())
+    if dropped_area:
+        log.warning("[Validação] %d linha(s) removida(s) por area_m2 ausente.", dropped_area)
+    df = df.loc[valid_area].copy()
 
-    # Ensure integer columns use nullable Int64 so CSV outputs integers instead of floats
+    # Land has no bedrooms, bathrooms, or garage spots; keep casa/apartamento nulls as pd.NA
+    is_terreno = df["prop_type"] == "terreno"
     for int_col in ("bedrooms", "bathrooms", "garage_spots"):
+        df.loc[is_terreno, int_col] = 0
         df[int_col] = df[int_col].astype("Int64")
+
     # Nullable boolean: True/False for Caixa's Financiamento column, <NA> for agencies
     df["accepts_financing"] = df["accepts_financing"].astype("boolean")
+
+    # Deterministic ordering before sequential prop_id assignment
+    df = df.sort_values(
+        by=["source", "city", "prop_type", "external_code", "title", "price_brl"],
+        kind="mergesort",
+        na_position="last",
+    ).reset_index(drop=True)
 
     # Assign sequential IDs r001, r002, ...
     df["prop_id"] = [f"r{i:03d}" for i in range(1, len(df) + 1)]
@@ -1377,6 +1367,15 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--clean-existing",
+        type=str,
+        default=None,
+        help=(
+            "Caminho de um CSV já unificado para aplicar limpeza, filtragem e ordenação "
+            "determinística offline sem acessar sites"
+        ),
+    )
+    parser.add_argument(
         "--max-pages",
         type=int,
         default=3,
@@ -1406,6 +1405,13 @@ def _read_urls_file(path: str) -> list[str]:
 
 
 def _run(args: argparse.Namespace) -> int:
+    if args.clean_existing:
+        collected = load_all_from_csv(args.clean_existing)
+        df = finalize_and_save(collected, args.output)
+        if df.empty:
+            raise ScrapeError("Nada a salvar após a limpeza; saída NÃO sobrescrita.")
+        return 0
+
     agency_urls = list(DEFAULT_AGENCY_URLS) + list(args.urls)
     if args.urls_file:
         agency_urls.extend(_read_urls_file(args.urls_file))
