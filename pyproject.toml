@@ -6,8 +6,11 @@ requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=4.15.0",
     "fastmcp",
+    "google-genai>=1.0",
     "numpy",
+    "openai>=1.50",
     "pandas",
+    "pydantic>=2.9",
     "requests>=2.34.2",
 ]
 
@@ -29,6 +32,9 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+markers = [
+    "live_judge: live LLM judge calibration tests against real API providers",
+]
 
 [tool.pyright]
 venvPath = "."
