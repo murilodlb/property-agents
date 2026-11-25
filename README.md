@@ -14,6 +14,14 @@ property-agents/
 ├── mcp_server/
 │   └── server.py                     # Servidor FastMCP ('imoveis-rn') com 6 ferramentas PT-BR
 ├── src/
+│   ├── agents/                       # 3 sistemas LangChain/LangGraph (ver seção 5)
+│   │   ├── mcp_tools.py              # Adaptador MCP → LangChain (fastmcp.Client, stdio)
+│   │   ├── single.py                 # langgraph_unico: agente ReAct único
+│   │   ├── verifier.py               # langgraph_verificador: gerador + verificador
+│   │   ├── supervisor.py             # langgraph_supervisor: supervisor + 3 especialistas
+│   │   ├── base.py / telemetry.py    # Interface answer(question) + tokens, CPU/RAM/GPU
+│   │   └── prompts.py / config.py    # Prompts PT-BR e configuração comum (Ollama)
+│   ├── run_agents.py                 # Executa 20 perguntas × 3 sistemas → executions.jsonl
 │   ├── catalog.py                    # Fonte única de verdade: carga, limpeza e P/VP mediano
 │   ├── questions.py                  # Suíte de 20 perguntas PT-BR + checagem_automatica
 │   ├── schema.py                     # Contratos Pydantic v2 (executions.jsonl, juiz e CSV)
@@ -23,7 +31,8 @@ property-agents/
 ├── tests/
 │   ├── test_catalog_and_mcp.py       # Testes unitários do catálogo e das 6 ferramentas MCP
 │   ├── test_judge_calibration.py     # Suíte de calibração (10 casos controlados + MCP real)
-│   └── test_metrics_pipeline.py      # Testes ponta a ponta de JSONL, métricas, resume e report
+│   ├── test_metrics_pipeline.py      # Testes ponta a ponta de JSONL, métricas, resume e report
+│   └── test_agents.py                # Testes offline dos 3 grafos (LLM falso + MCP real)
 ├── .env.example                      # Modelo de variáveis de ambiente para o Juiz Frontier
 ├── pyproject.toml                    # Dependências (uv), pytest, ruff e pyright
 └── README.md
@@ -138,7 +147,45 @@ for item in PERGUNTAS:
 
 ---
 
-## 5. Como Executar a Avaliação, Calibração e Relatórios
+## 5. Sistemas de Agentes (LangChain + LangGraph)
+
+Os três sistemas usam **o mesmo modelo local no Ollama** (padrão `qwen3.5:2b`, Q8_0, com suporte a *tool calling*), a mesma temperatura (`0`), `seed`, janela de contexto, as mesmas 6 ferramentas MCP e o mesmo *system prompt* base — fundamentado no recurso MCP `estoque://esquema`. Só muda a orquestração.
+
+| Sistema (`sistema`) | Padrão (Aula 12) | Grafo | Agentes |
+|---|---|---|---|
+| `langgraph_unico` | Agente único ReAct (baseline) | `model ⇄ tools` (`langchain.agents.create_agent`) | 1 |
+| `langgraph_verificador` | Gerador com verificador | `gerar → verificar → (aprovado? fim : preparar_revisao → gerar)` | 2 |
+| `langgraph_supervisor` | Supervisor com especialistas | `supervisor → {pesquisador_mercado \| analista_imoveis \| analista_financeiro} → supervisor → … → sintetizar` | 4 |
+
+**Justificativa das arquiteturas.**
+- **Gerador com verificador:** os principais modos de falha de um modelo pequeno neste domínio são *alucinação de ids/valores*, *aceitar premissas falsas* (perguntas 16–17) e *inventar dados ausentes* (18–20). O verificador recebe a pergunta, as chamadas de ferramentas do gerador com seus resultados (evidências) e o rascunho, e devolve um veredito estruturado (JSON restrito via `format` do Ollama). Há ainda duas regras determinísticas que o LLM não pode sobrepor: rascunho sem nenhuma consulta é reprovado, e todo `imovel_id` citado precisa aparecer nas evidências. Máximo de `AGENT_MAX_REVISOES=2` reescritas.
+- **Supervisor com especialistas:** as perguntas se dividem em domínios que casam com grupos de ferramentas — busca/estatística (`buscar_imoveis`, `estatisticas_mercado`), ficha/comparação (`detalhes_imovel`, `comparar_imoveis`) e cálculo financeiro (`avaliar_investimento`, `simular_compra_financiamento`). Cada especialista vê só 2–3 ferramentas (espaço de escolha menor para o modelo pequeno), e o supervisor decompõe perguntas de múltiplas etapas (ex.: Q10/Q11 *buscar → comparar*; Q16 *verificar financiamento → simular*). O supervisor decide o roteamento com saída estruturada e escreve a resposta final a partir dos relatórios. Máximo de `AGENT_MAX_DELEGACOES=4` delegações.
+
+**Recuperação de erros.** As ferramentas nunca lançam exceção para o grafo: argumentos inválidos (validação do FastMCP) e ids inexistentes voltam ao LLM como mensagem `ERRO ...` com instrução de correção, e o *loop* continua. Uma proteção contra *loops* devolve o resultado anterior com um `AVISO` quando a mesma ferramenta é chamada de novo com os mesmos argumentos (aplicada igualmente aos três sistemas).
+
+**Interface comum.** Todo sistema expõe `await sistema.answer(pergunta) -> AgentResult`, com a resposta e os dados de execução: ferramentas chamadas (em ordem), chamadas ao modelo (somadas entre todos os agentes, e por agente), tokens de entrada/saída, latência, erros de ferramenta e CPU/RAM/GPU amostrados a cada 0,5 s (processo Python + servidor MCP + processos do Ollama). `AgentResult.to_record(pergunta_id)` gera o `ExecutionRecord` da seção 4. Uso síncrono (scripts/notebooks):
+
+```python
+from src.agents import SyncAgents
+
+with SyncAgents() as agentes:
+    r = agentes.answer("langgraph_supervisor", "Qual é o preço do imóvel r001?")
+    print(r.resposta, r.ferramentas_usadas, r.chamadas_modelo, r.tokens_entrada, r.latencia_segundos)
+```
+
+**Executar as 60 execuções** (requer `ollama pull qwen3.5:2b` e o Ollama rodando):
+
+```bash
+uv run python -m src.run_agents                    # 3 sistemas × 20 perguntas
+uv run python -m src.run_agents --resume           # retoma pulando pares já gravados
+uv run python -m src.run_agents --sistemas langgraph_unico --perguntas 1 2 3
+```
+
+Saídas em `results/`: `executions.jsonl` (entrada do `src.metrics`), `trajetorias.jsonl` (vereditos do verificador, delegações do supervisor e chamadas por agente, para a análise de erros) e `ambiente.json` (hardware, modelo, quantização e versões das bibliotecas). Variáveis de configuração: `AGENT_MODEL`, `OLLAMA_URL`, `AGENT_TEMPERATURE`, `AGENT_SEED`, `AGENT_NUM_CTX`, `AGENT_REASONING` (modo *thinking*, desligado por padrão), `AGENT_RECURSION_LIMIT`, `AGENT_TIMEOUT_SECONDS`, `AGENT_MAX_REVISOES` e `AGENT_MAX_DELEGACOES`.
+
+---
+
+## 6. Como Executar a Avaliação, Calibração e Relatórios
 
 ### 1. Instalar dependências com `uv`
 
