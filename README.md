@@ -13,6 +13,8 @@ property-agents/
 │   └── real_properties.csv           # Base consolidada e limpa (801 imóveis reais únicos)
 ├── mcp_server/
 │   └── server.py                     # Servidor FastMCP ('imoveis-rn') com 6 ferramentas PT-BR
+├── notebooks/
+│   └── colab_benchmark_gpu.ipynb     # Pipeline completo na GPU do Colab (agentes + juiz + report)
 ├── src/
 │   ├── catalog.py                    # Fonte única de verdade: carga, limpeza e P/VP mediano
 │   ├── questions.py                  # Suíte de 20 perguntas PT-BR + checagem_automatica
@@ -89,6 +91,13 @@ Todos os notebooks/agentes da equipe (**LangGraph / CrewAI**) devem gravar suas 
 | `latencia_segundos` | `float` (`>= 0.0`) | Sim | Tempo total de execução fim a fim em segundos. |
 | `tokens_entrada` | `int \| None` | Opcional | Total de tokens de entrada consumidos (`None` se indisponível). |
 | `tokens_saida` | `int \| None` | Opcional | Total de tokens de saída gerados (`None` se indisponível). |
+| `erros_ferramentas` | `int \| None` | Opcional | Quantidade de erros retornados pelas ferramentas MCP na execução (`>= 0`). |
+| `num_agentes` | `int \| None` | Opcional | Número de agentes participantes na arquitetura (`>= 1`). |
+| `cpu_pct_medio` | `float \| None` | Opcional | Uso médio de CPU (%) durante a execução (`>= 0.0`). |
+| `cpu_pct_pico` | `float \| None` | Opcional | Pico de uso de CPU (%) durante a execução (`>= 0.0`). |
+| `ram_mb_pico` | `float \| None` | Opcional | Pico de memória RAM utilizada em MB (`>= 0.0`). |
+| `gpu_pct_medio` | `float \| None` | Opcional | Uso médio da GPU (%) durante a execução (`>= 0.0`, `None` sem GPU). |
+| `gpu_mem_mb_pico` | `float \| None` | Opcional | Pico de memória VRAM da GPU em MB (`>= 0.0`, `None` sem GPU). |
 | `modelo_agente` | `str \| None` | Opcional | Nome do modelo usado pelo agente (ex.: `"qwen3:8b"`). |
 | `erro_execucao` | `str \| None` | Opcional | Mensagem de erro caso a execução tenha falhado/dado timeout (`None` quando ok). |
 | `timestamp_utc` | `str` | Automático | Timestamp ISO-8601 UTC preenchido automaticamente pelo `ExecutionRecord`. |
@@ -186,7 +195,7 @@ uv run python -m src.report --input results/benchmark_60_execucoes.csv --out-dir
 ```
 
 Gera:
-- `results/benchmark_summary.md` (Tabelas de resumo por sistema, matriz Categoria × Sistema e distribuição de vereditos + Kappa de Cohen)
+- `results/benchmark_summary.md` (Tabela 1 com `Taxa Acerto (%)`, `Taxa Alucinação (%)` e quebra `Chamadas LLM / Tools / Total`; Tabela 2 Categoria × Sistema; Tabela 3 distribuição de vereditos + Kappa de Cohen; Tabela 4 estatísticas computacionais de CPU, RAM e GPU)
 - `results/divergencias_auditoria_manual.csv` (casos em que automático e juiz divergem ou veredito != `correta`, com colunas `revisao_manual` e `nota_manual`)
 
 ### 5. Calibração do Juiz e Suíte de Testes
@@ -198,3 +207,11 @@ uv run pytest -m "not live_judge" -v
 # Calibração ao vivo nos 10 casos controlados (4 positivos + 6 pegadinhas/alucinações)
 GEMINI_API_KEY="sua_chave_aqui" uv run python tests/test_judge_calibration.py --live --provider gemini
 ```
+
+### 6. Execução completa no Google Colab (GPU)
+
+Para rodar todas as arquiteturas da branch `feat/agentes-langchain`, o Juiz MCP e o relatório consolidado diretamente na GPU do Google Colab, abra o notebook via GitHub:
+
+`https://colab.research.google.com/github/murilodlb/property-agents/blob/main/notebooks/colab_benchmark_gpu.ipynb`
+
+> **Dica:** defina `GEMINI_API_KEY` (ou configure nos **Secrets** do Colab) na primeira célula de código e certifique-se de que a branch `main` no GitHub contém a versão mais recente de `src/report.py`.

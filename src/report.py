@@ -7,6 +7,7 @@ import argparse
 import sys
 from collections.abc import Sequence
 from pathlib import Path
+from statistics import median
 from typing import Any
 
 import pandas as pd
@@ -36,6 +37,14 @@ AUDIT_COLUMNS: list[str] = [
     "revisao_manual",
     "nota_manual",
 ]
+
+RESOURCE_COLUMNS: tuple[str, ...] = (
+    "cpu_pct_medio",
+    "cpu_pct_pico",
+    "ram_mb_pico",
+    "gpu_pct_medio",
+    "gpu_mem_mb_pico",
+)
 
 
 def _to_bool(value: Any) -> bool | None:
@@ -83,6 +92,72 @@ def _format_pct(num: int, total: int) -> str:
     return f"{num}/{total} ({(num / total) * 100.0:.1f}%)"
 
 
+def _extract_floats(
+    sub: pd.DataFrame,
+    col: str,
+    *,
+    fill_na: float | None = None,
+) -> list[float]:
+    if col not in sub.columns:
+        return []
+    out: list[float] = []
+    for raw in sub[col].tolist():
+        if raw is None or bool(pd.isna(raw)):
+            if fill_na is not None:
+                out.append(fill_na)
+            continue
+        try:
+            out.append(float(raw))
+        except (TypeError, ValueError):
+            if fill_na is not None:
+                out.append(fill_na)
+    return out
+
+
+def _sum_int_column(sub: pd.DataFrame, col: str) -> int:
+    return int(sum(_extract_floats(sub, col)))
+
+
+def _format_mean(sub: pd.DataFrame, col: str, unit: str, decimals: int = 1) -> str:
+    vals = _extract_floats(sub, col)
+    if not vals:
+        return "N/A"
+    return f"{sum(vals) / len(vals):.{decimals}f}{unit}"
+
+
+def _format_max(sub: pd.DataFrame, col: str, unit: str, decimals: int = 1) -> str:
+    vals = _extract_floats(sub, col)
+    if not vals:
+        return "N/A"
+    return f"{max(vals):.{decimals}f}{unit}"
+
+
+def _format_mean_max(sub: pd.DataFrame, col: str, unit: str, decimals: int = 1) -> str:
+    vals = _extract_floats(sub, col)
+    if not vals:
+        return "N/A"
+    mean_val = sum(vals) / len(vals)
+    max_val = max(vals)
+    return f"{mean_val:.{decimals}f}{unit} / {max_val:.{decimals}f}{unit}"
+
+
+def _count_resource_samples(sub: pd.DataFrame) -> int:
+    present = [col for col in RESOURCE_COLUMNS if col in sub.columns]
+    if not present or len(sub) == 0:
+        return 0
+    has_sample = [False] * len(sub)
+    for col in present:
+        for idx, raw in enumerate(sub[col].tolist()):
+            if has_sample[idx] or raw is None or bool(pd.isna(raw)):
+                continue
+            try:
+                float(raw)
+                has_sample[idx] = True
+            except (TypeError, ValueError):
+                continue
+    return sum(has_sample)
+
+
 def _build_markdown_table(headers: list[str], rows: list[list[str]]) -> str:
     lines = [
         "| " + " | ".join(headers) + " |",
@@ -118,11 +193,14 @@ def generate_report(
         "Execuções",
         "Acerto Auto",
         "Acerto Juiz",
-        "Ferramenta Correta (%)",
+        "Taxa Acerto (%)",
         "Taxa Alucinação (%)",
+        "Ferramenta Correta (%)",
         "Concordância Auto/Juiz (%)",
         "Kappa Cohen",
-        "Chamadas Modelo (Total / Média)",
+        "Chamadas LLM (Total / Média)",
+        "Chamadas Tools (Total / Média)",
+        "Chamadas Total (Total / Média)",
         "Latência (Total s / Mediana s)",
         "Tokens Totais",
     ]
@@ -141,6 +219,7 @@ def generate_report(
         if judge_pairs:
             judge_ok = sum(1 for _, j in judge_pairs if j)
             judge_str = _format_pct(judge_ok, len(judge_pairs))
+            taxa_acerto_str = f"{(judge_ok / len(judge_pairs)) * 100.0:.1f}%"
             agree = sum(1 for a, j in judge_pairs if a == j)
             agree_str = f"{(agree / len(judge_pairs)) * 100.0:.1f}%"
             kappa = compute_cohens_kappa(
@@ -154,16 +233,23 @@ def generate_report(
             halluc_str = f"{(halluc_cnt / len(judge_pairs)) * 100.0:.1f}%"
         else:
             judge_str = "N/A"
+            taxa_acerto_str = f"{(auto_ok / n) * 100.0:.1f}%" if n else "0.0%"
             agree_str = "N/A"
             kappa_str = "N/A"
             halluc_str = "N/A"
 
-        calls_total = int(sub["chamadas_modelo"].fillna(0).sum())
-        calls_avg = calls_total / n if n else 0.0
-        lat_total = float(sub["latencia_segundos"].fillna(0.0).sum())
-        lat_med = float(sub["latencia_segundos"].fillna(0.0).median()) if n else 0.0
-        tok_in = int(sub["tokens_entrada"].fillna(0).sum())
-        tok_out = int(sub["tokens_saida"].fillna(0).sum())
+        llm_calls_total = _sum_int_column(sub, "chamadas_modelo")
+        llm_calls_avg = llm_calls_total / n if n else 0.0
+        tool_calls_total = _sum_int_column(sub, "num_tool_calls")
+        tool_calls_avg = tool_calls_total / n if n else 0.0
+        total_calls = llm_calls_total + tool_calls_total
+        total_calls_avg = total_calls / n if n else 0.0
+
+        lat_vals = _extract_floats(sub, "latencia_segundos", fill_na=0.0)
+        lat_total = sum(lat_vals)
+        lat_med = float(median(lat_vals)) if lat_vals else 0.0
+        tok_in = _sum_int_column(sub, "tokens_entrada")
+        tok_out = _sum_int_column(sub, "tokens_saida")
         tok_total = tok_in + tok_out
 
         t1_rows.append(
@@ -172,15 +258,24 @@ def generate_report(
                 str(n),
                 _format_pct(auto_ok, n),
                 judge_str,
-                f"{(tool_ok / n) * 100.0:.1f}%" if n else "0.0%",
+                taxa_acerto_str,
                 halluc_str,
+                f"{(tool_ok / n) * 100.0:.1f}%" if n else "0.0%",
                 agree_str,
                 kappa_str,
-                f"{calls_total} / {calls_avg:.2f}",
+                f"{llm_calls_total} / {llm_calls_avg:.2f}",
+                f"{tool_calls_total} / {tool_calls_avg:.2f}",
+                f"{total_calls} / {total_calls_avg:.2f}",
                 f"{lat_total:.1f}s / {lat_med:.2f}s",
                 str(tok_total),
             ]
         )
+
+    t1_note = (
+        "_Nota: `Taxa Acerto (%)` usa o veredito do Juiz MCP quando disponível "
+        "(ou `Acerto Auto` no modo `--skip-judge`); "
+        "`Chamadas Total = Chamadas LLM + Chamadas Tools`._"
+    )
 
     # Tabela 2 — Matriz de Acerto do Juiz por Categoria × Sistema
     has_any_judge = any(v is not None for v in df["_juiz_bool"])
@@ -217,16 +312,46 @@ def generate_report(
         no_judge = str(int((verdicts == "").sum()))
         t3_rows.append([sys_name, *counts, no_judge])
 
+    # Tabela 4 — Estatísticas Computacionais por Sistema (CPU, RAM e GPU)
+    t4_headers = [
+        "Sistema",
+        "Amostras Telemetria",
+        "CPU Médio (%)",
+        "CPU Pico (%)",
+        "RAM Pico (MB) (Média / Máx)",
+        "GPU Média (%) (Média / Máx)",
+        "VRAM GPU Pico (MB) (Média / Máx)",
+    ]
+    t4_rows: list[list[str]] = []
+    for sys_name in systems:
+        sub = df.loc[df["sistema"] == sys_name]
+        n = int(len(sub))
+        samples = _count_resource_samples(sub)
+        t4_rows.append(
+            [
+                sys_name,
+                f"{samples}/{n}",
+                _format_mean(sub, "cpu_pct_medio", "%", decimals=1),
+                _format_max(sub, "cpu_pct_pico", "%", decimals=1),
+                _format_mean_max(sub, "ram_mb_pico", " MB", decimals=1),
+                _format_mean_max(sub, "gpu_pct_medio", "%", decimals=1),
+                _format_mean_max(sub, "gpu_mem_mb_pico", " MB", decimals=1),
+            ]
+        )
+
     summary_md = "\n\n".join(
         [
             "# Relatório Consolidado do Benchmark — Property Agents (RN)",
             f"Arquivo avaliado: `{in_path}` ({len(df)} execuções)",
             "## Tabela 1 — Resumo Geral por Sistema/Arquitetura",
             _build_markdown_table(t1_headers, t1_rows),
+            t1_note,
             f"## {t2_title}",
             _build_markdown_table(t2_headers, t2_rows),
             "## Tabela 3 — Distribuição de Vereditos Detalhados por Sistema",
             _build_markdown_table(t3_headers, t3_rows),
+            "## Tabela 4 — Estatísticas Computacionais por Sistema (CPU, RAM e GPU)",
+            _build_markdown_table(t4_headers, t4_rows),
         ]
     )
 

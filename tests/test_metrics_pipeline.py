@@ -79,6 +79,13 @@ def test_execution_record_and_jsonl_roundtrip(tmp_path: Path) -> None:
         latencia_segundos=1.25,
         tokens_entrada=300,
         tokens_saida=90,
+        erros_ferramentas=1,
+        num_agentes=1,
+        cpu_pct_medio=45.5,
+        cpu_pct_pico=78.0,
+        ram_mb_pico=1024.0,
+        gpu_pct_medio=68.0,
+        gpu_mem_mb_pico=4096.0,
         modelo_agente="qwen3:8b",
     )
     rec2 = ExecutionRecord(
@@ -95,7 +102,16 @@ def test_execution_record_and_jsonl_roundtrip(tmp_path: Path) -> None:
     loaded = load_executions_jsonl(jsonl_path)
     assert len(loaded) == 2
     assert loaded[0].sistema == "langgraph_unico"
+    assert loaded[0].erros_ferramentas == 1
+    assert loaded[0].num_agentes == 1
+    assert loaded[0].cpu_pct_medio == 45.5
+    assert loaded[0].cpu_pct_pico == 78.0
+    assert loaded[0].ram_mb_pico == 1024.0
+    assert loaded[0].gpu_pct_medio == 68.0
+    assert loaded[0].gpu_mem_mb_pico == 4096.0
     assert loaded[1].pergunta_id == 18
+    assert loaded[1].cpu_pct_medio is None
+    assert loaded[1].gpu_pct_medio is None
 
     bad_path = tmp_path / "bad.jsonl"
     bad_path.write_text('{"sistema": "ok"}\n', encoding="utf-8")
@@ -133,17 +149,31 @@ def test_metrics_pipeline_resume_and_report(tmp_path: Path) -> None:
             latencia_segundos=1.4,
             tokens_entrada=250,
             tokens_saida=80,
+            erros_ferramentas=0,
+            num_agentes=1,
+            cpu_pct_medio=40.0,
+            cpu_pct_pico=65.0,
+            ram_mb_pico=1000.0,
+            gpu_pct_medio=60.0,
+            gpu_mem_mb_pico=3000.0,
             modelo_agente="qwen3:8b",
         ),
         ExecutionRecord(
             sistema="langgraph_unico",
             pergunta_id=12,
             resposta=c_pos_q12["execution"].resposta,
-            ferramentas_usadas=["avaliar_investimento"],
+            ferramentas_usadas=["avaliar_investimento", "detalhes_imovel"],
             chamadas_modelo=2,
             latencia_segundos=1.2,
             tokens_entrada=280,
             tokens_saida=95,
+            erros_ferramentas=0,
+            num_agentes=1,
+            cpu_pct_medio=60.0,
+            cpu_pct_pico=85.0,
+            ram_mb_pico=1500.0,
+            gpu_pct_medio=80.0,
+            gpu_mem_mb_pico=5000.0,
             modelo_agente="qwen3:8b",
         ),
         div_rec,
@@ -238,13 +268,76 @@ def test_metrics_pipeline_resume_and_report(tmp_path: Path) -> None:
     artifacts = generate_report(out_csv, tmp_path)
     summary_text = artifacts["summary_md"].read_text(encoding="utf-8")
     assert "Tabela 1 — Resumo Geral por Sistema/Arquitetura" in summary_text
+    assert "Taxa Acerto (%)" in summary_text
+    assert "Taxa Alucinação (%)" in summary_text
+    assert "Chamadas LLM (Total / Média)" in summary_text
+    assert "Chamadas Tools (Total / Média)" in summary_text
+    assert "Chamadas Total (Total / Média)" in summary_text
     assert "Tabela 2 — Matriz de Acerto do Juiz por Categoria × Sistema" in summary_text
     assert "Tabela 3 — Distribuição de Vereditos Detalhados por Sistema" in summary_text
-    assert "langgraph_unico" in summary_text
+    assert "Tabela 4 — Estatísticas Computacionais por Sistema (CPU, RAM e GPU)" in summary_text
+    assert "| langgraph_unico | 2 | 2/2 (100.0%) | 2/2 (100.0%) | 100.0% | 0.0% |" in summary_text
+    assert "| 4 / 2.00 | 3 / 1.50 | 7 / 3.50 |" in summary_text
+    assert (
+        "| langgraph_unico | 2/2 | 50.0% | 85.0% | 1250.0 MB / 1500.0 MB "
+        "| 70.0% / 80.0% | 4000.0 MB / 5000.0 MB |"
+    ) in summary_text
+    assert "| langgraph_supervisor | 0/2 | N/A | N/A | N/A | N/A | N/A |" in summary_text
 
     df_div = pd.read_csv(artifacts["divergencias_csv"])
     assert len(df_div) == 4  # 4 rows with veredito_detalhado != 'correta' or divergence
     assert set(df_div["veredito_detalhado"]) == {"parcial", "incorreta", "alucinacao"}
+
+
+def test_report_legacy_csv_and_skip_judge_fallback(tmp_path: Path) -> None:
+    legacy_csv = tmp_path / "legacy.csv"
+    df_legacy = pd.DataFrame(
+        [
+            {
+                "sistema": "langgraph_unico",
+                "pergunta_id": 1,
+                "categoria": "busca_com_filtro",
+                "ferramenta_esperada": "buscar_imoveis",
+                "ferramentas_usadas": '["buscar_imoveis"]',
+                "ferramenta_correta": True,
+                "num_tool_calls": 1,
+                "chamadas_modelo": 2,
+                "latencia_segundos": 1.0,
+                "tokens_entrada": 100,
+                "tokens_saida": 50,
+                "acerto_automatico": True,
+                "falhas_automaticas": "",
+                "acerto_juiz": None,
+                "veredito_detalhado": None,
+                "resposta_agente": "Imóvel r001.",
+            },
+            {
+                "sistema": "langgraph_unico",
+                "pergunta_id": 2,
+                "categoria": "busca_com_filtro",
+                "ferramenta_esperada": "buscar_imoveis",
+                "ferramentas_usadas": '["buscar_imoveis", "detalhes_imovel"]',
+                "ferramenta_correta": True,
+                "num_tool_calls": 2,
+                "chamadas_modelo": 3,
+                "latencia_segundos": 2.0,
+                "tokens_entrada": 200,
+                "tokens_saida": 70,
+                "acerto_automatico": False,
+                "falhas_automaticas": "faltou_valor",
+                "acerto_juiz": None,
+                "veredito_detalhado": None,
+                "resposta_agente": "Sem valor.",
+            },
+        ]
+    )
+    df_legacy.to_csv(legacy_csv, index=False)
+
+    artifacts = generate_report(legacy_csv, tmp_path / "out")
+    summary_text = artifacts["summary_md"].read_text(encoding="utf-8")
+    assert "| langgraph_unico | 2 | 1/2 (50.0%) | N/A | 50.0% | N/A |" in summary_text
+    assert "| 5 / 2.50 | 3 / 1.50 | 8 / 4.00 |" in summary_text
+    assert "| langgraph_unico | 0/2 | N/A | N/A | N/A | N/A | N/A |" in summary_text
 
 
 def test_compute_cohens_kappa() -> None:

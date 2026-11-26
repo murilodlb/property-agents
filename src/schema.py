@@ -32,6 +32,15 @@ class ExecutionRecord(BaseModel):
     erro_execucao: str | None = None
     timestamp_utc: str = Field(default_factory=_utc_now_iso)
 
+    # Optional telemetry (computational resources sampled during the run)
+    erros_ferramentas: int | None = Field(default=None, ge=0)
+    num_agentes: int | None = Field(default=None, ge=1)
+    cpu_pct_medio: float | None = Field(default=None, ge=0.0)
+    cpu_pct_pico: float | None = Field(default=None, ge=0.0)
+    ram_mb_pico: float | None = Field(default=None, ge=0.0)
+    gpu_pct_medio: float | None = Field(default=None, ge=0.0)
+    gpu_mem_mb_pico: float | None = Field(default=None, ge=0.0)
+
     @field_validator("sistema")
     @classmethod
     def _validate_sistema(cls, value: str) -> str:
@@ -80,6 +89,15 @@ class BenchmarkRow(BaseModel):
     tokens_entrada: int | None = None
     tokens_saida: int | None = None
     erro_execucao: str | None = None
+    erros_ferramentas: int | None = None
+    num_agentes: int | None = None
+
+    # Computational resources
+    cpu_pct_medio: float | None = None
+    cpu_pct_pico: float | None = None
+    ram_mb_pico: float | None = None
+    gpu_pct_medio: float | None = None
+    gpu_mem_mb_pico: float | None = None
 
     # Automatic grading
     acerto_automatico: bool
