@@ -152,3 +152,23 @@ def test_execution_errors_are_captured(nome: str) -> None:
     res = run(_systems(llm)(nome, "?"))
     assert res.erro_execucao
     assert res.to_record(1).erro_execucao
+
+
+def test_model_call_cap_forces_final_answer() -> None:
+    cfg = AgentConfig()
+    cfg.max_chamadas_agente = 2
+    loop = [_tool_call("detalhes_imovel", {"imovel_id": f"r00{i}"}, i) for i in range(1, 4)]
+    llm = ScriptedChat(messages=iter([*loop[:2], _final("Resposta forçada: r001 e r002")]))
+
+    async def _go() -> Any:
+        async with MCPToolkit() as tk:
+            system = build_systems(tk, cfg, ["langgraph_unico"])["langgraph_unico"]
+            system.llm = llm
+            return await system.answer("?")
+
+    res = run(_go())
+    assert res.erro_execucao is None
+    assert res.resposta == "Resposta forçada: r001 e r002"
+    assert res.detalhes["limites_de_chamadas_atingidos"] == 1
+    assert res.chamadas_modelo == 3
+    assert res.ferramentas_usadas == ["detalhes_imovel", "detalhes_imovel"]

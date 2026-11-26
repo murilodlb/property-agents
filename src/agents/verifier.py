@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 import operator
+import re
 from typing import Annotated, Any, Literal, TypedDict
 
-from langchain.agents import create_agent
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
@@ -18,8 +18,23 @@ from src.questions import PROP_ID_RE
 
 
 class Veredito(BaseModel):
-    """Structured output of the verifier (constrained JSON via Ollama ``format``)."""
+    """Structured output of the verifier (constrained JSON via Ollama ``format``).
 
+    Field order matters for small models: they fill the JSON in order, so the two
+    checklist fields act as guided reasoning before the final ``aprovado`` decision.
+    """
+
+    item_ou_dado_inexistente: bool = Field(
+        default=False,
+        description=(
+            "true se as evidências mostram que algum imóvel pedido não existe no estoque ou "
+            "que o dado pedido não é registrado no catálogo"
+        ),
+    )
+    rascunho_fiel_as_evidencias: bool = Field(
+        default=True,
+        description="true se todos os ids e números do rascunho constam nas evidências",
+    )
     aprovado: bool = Field(description="true se o rascunho pode ser entregue ao cliente")
     problemas: list[str] = Field(
         default_factory=list, description="lista de problemas encontrados (vazia se aprovado)"
@@ -36,6 +51,13 @@ class VerificadorState(TypedDict, total=False):
     evidencias: list[dict[str, Any]]
     revisoes: int
     vereditos: Annotated[list[dict[str, Any]], operator.add]
+
+
+_INEXISTENTE_RE = re.compile(
+    r"n[ãa]o (consta|existe|foi encontrad|encontr|est[áa] dispon|h[áa] registro|[ée] registrad|"
+    r"possui registro|[ée] informad)|inexistente|indispon[íi]ve",
+    re.IGNORECASE,
+)
 
 
 def _ids_sem_evidencia(rascunho: str, evidencias: list[dict[str, Any]]) -> list[str]:
@@ -61,9 +83,7 @@ class GeradorVerificador(AgentSystem):
     num_agentes = 2
 
     def _build(self) -> None:
-        self.gerador = create_agent(
-            self.llm, self.toolkit.tools, system_prompt=self.system_prompt, name="gerador"
-        )
+        self.gerador = self.react_agent(self.toolkit.tools, self.system_prompt, "gerador")
         self.verificador = self.llm.with_structured_output(Veredito, method="json_schema")
 
         graph = StateGraph(VerificadorState)
@@ -80,10 +100,7 @@ class GeradorVerificador(AgentSystem):
 
     async def _gerar(self, state: VerificadorState, config: RunnableConfig) -> dict[str, Any]:
         mensagens = state.get("mensagens") or [HumanMessage(state["pergunta"])]
-        out = await self.gerador.ainvoke(
-            {"messages": mensagens}, config=self.run_config(config, "gerador")
-        )
-        msgs: list[BaseMessage] = out["messages"]
+        msgs = await self.run_react(self.gerador, mensagens, self.system_prompt, config, "gerador")
         return {
             "mensagens": msgs,
             "rascunho": final_ai_text(msgs),
@@ -115,6 +132,16 @@ class GeradorVerificador(AgentSystem):
             assert isinstance(veredito, Veredito)
         except Exception as exc:  # malformed JSON from the small model: accept the draft
             veredito = Veredito(aprovado=True, problemas=[f"verificador falhou: {exc}"])
+        if (
+            not veredito.aprovado
+            and veredito.item_ou_dado_inexistente
+            and veredito.rascunho_fiel_as_evidencias
+            and _INEXISTENTE_RE.search(rascunho)
+        ):
+            # The draft correctly reports a missing item/datum: demanding the missing values
+            # would push the generator to hallucinate them (observed with 2B models).
+            veredito.aprovado = True
+            veredito.problemas.append("aprovado por regra: rascunho informa item/dado inexistente")
         if not evidencias or sem_evidencia:
             # Hard rules the LLM verifier must not override.
             veredito.aprovado = False

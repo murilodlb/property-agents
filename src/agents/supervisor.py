@@ -6,7 +6,6 @@ import json
 import operator
 from typing import Annotated, Any, Literal, TypedDict
 
-from langchain.agents import create_agent
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.errors import GraphRecursionError
@@ -64,12 +63,14 @@ class SupervisorEspecialistas(AgentSystem):
 
     def _build(self) -> None:
         self.roteador = self.llm.with_structured_output(Decisao, method="json_schema")
+        self.prompts_especialistas = {
+            nome: especialista_system(nome, self.system_prompt) for nome in ESPECIALISTAS
+        }
         self.especialistas = {
-            nome: create_agent(
-                self.llm,
+            nome: self.react_agent(
                 self.toolkit.select(info["ferramentas"]),  # type: ignore[arg-type]
-                system_prompt=especialista_system(nome, self.system_prompt),
-                name=nome,
+                self.prompts_especialistas[nome],
+                nome,
             )
             for nome, info in ESPECIALISTAS.items()
         }
@@ -127,10 +128,10 @@ class SupervisorEspecialistas(AgentSystem):
                 f"Tarefa delegada pelo supervisor: {state.get('instrucao')}{contexto}"
             )
             try:
-                out = await agente.ainvoke(
-                    {"messages": [HumanMessage(tarefa)]}, config=self.run_config(config, nome)
+                msgs = await self.run_react(
+                    agente, [HumanMessage(tarefa)], self.prompts_especialistas[nome], config, nome
                 )
-                relatorio = final_ai_text(out["messages"]) or "(especialista sem relatório)"
+                relatorio = final_ai_text(msgs) or "(especialista sem relatório)"
             except GraphRecursionError:
                 relatorio = (
                     "(o especialista excedeu o limite de passos sem concluir a tarefa; "

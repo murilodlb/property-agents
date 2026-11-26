@@ -10,18 +10,22 @@ from collections.abc import Coroutine
 from dataclasses import asdict, dataclass, field
 from typing import Any, TypeVar
 
+from langchain.agents import create_agent
+from langchain.agents.middleware import ModelCallLimitMiddleware
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import BaseTool
 
 from src.agents.config import AgentConfig
 from src.agents.mcp_tools import MCPToolkit
-from src.agents.prompts import build_base_system_prompt
+from src.agents.prompts import FORCAR_RESPOSTA, build_base_system_prompt
 from src.agents.telemetry import ExecutionTracker, ResourceMonitor, ResourceSnapshot, Stopwatch
 from src.schema import ExecutionRecord
 
 T = TypeVar("T")
 
+_LIMIT_MARKER = "Model call limits exceeded"
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 
 
@@ -115,6 +119,7 @@ class AgentSystem(ABC):
         self.llm = llm or self.config.build_llm()
         self.esquema = ""
         self._built = False
+        self._limites_atingidos = 0
 
     async def setup(self) -> None:
         """Ground the prompts on the MCP resource ``estoque://esquema`` and build the graph."""
@@ -137,12 +142,55 @@ class AgentSystem(ABC):
         metadata = {**(config.get("metadata") or {}), "agente": agente}
         return {**config, "metadata": metadata, "recursion_limit": self.config.recursion_limit}
 
+    def react_agent(self, tools: list[BaseTool], system_prompt: str, name: str) -> Any:
+        """ReAct agent used by every system, with the same per-run model-call cap."""
+        return create_agent(
+            self.llm,
+            tools,
+            system_prompt=system_prompt,
+            name=name,
+            middleware=[
+                ModelCallLimitMiddleware(
+                    run_limit=self.config.max_chamadas_agente, exit_behavior="end"
+                )
+            ],
+        )
+
+    async def run_react(
+        self,
+        agent: Any,
+        messages: list[BaseMessage],
+        system_prompt: str,
+        config: RunnableConfig,
+        agente: str,
+    ) -> list[BaseMessage]:
+        """Invoke a ReAct agent; if it hits the call cap, force a tool-free final answer.
+
+        Small models sometimes keep calling tools forever. When the cap is reached the
+        loop is cut and the model gets one last call, without tools, to answer with the
+        results already collected (same policy for every system).
+        """
+        cfg = self.run_config(config, agente)
+        out = await agent.ainvoke({"messages": messages}, config=cfg)
+        msgs: list[BaseMessage] = list(out["messages"])
+        last = msgs[-1] if msgs else None
+        if isinstance(last, AIMessage) and message_text(last).startswith(_LIMIT_MARKER):
+            history = msgs[:-1]
+            final = await self.llm.ainvoke(
+                [SystemMessage(system_prompt), *history, HumanMessage(FORCAR_RESPOSTA)],
+                config=cfg,
+            )
+            msgs = [*history, AIMessage(content=message_text(final))]
+            self._limites_atingidos += 1
+        return msgs
+
     async def answer(self, question: str) -> AgentResult:
         """Common interface: answer ``question`` and return the answer + execution data."""
         await self.setup()
         tracker = ExecutionTracker()
         errors_before = self.toolkit.tool_errors
         repeated_before = self.toolkit.repeated_calls
+        self._limites_atingidos = 0
         self.toolkit.reset_cache()
         resposta = ""
         detalhes: dict[str, Any] = {}
@@ -162,6 +210,8 @@ class AgentSystem(ABC):
             erro = "resposta vazia"
         tokens_in, tokens_out = tracker.tokens
         detalhes["chamadas_por_agente"] = tracker.chamadas_por_agente
+        detalhes["limites_de_chamadas_atingidos"] = self._limites_atingidos
+        detalhes["chamadas_ferramentas"] = tracker.chamadas_ferramentas
         detalhes["chamadas_repetidas_bloqueadas"] = self.toolkit.repeated_calls - repeated_before
         return AgentResult(
             sistema=self.nome,

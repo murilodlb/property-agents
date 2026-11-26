@@ -25,6 +25,13 @@ REGRAS_FERRAMENTAS = (
 )
 
 
+FORCAR_RESPOSTA = (
+    "Limite de passos atingido. NÃO chame mais ferramentas. Com base apenas nos resultados "
+    "de ferramentas já obtidos acima, escreva agora a resposta final (cite os imovel_id e "
+    "diga claramente o que não foi possível obter)."
+)
+
+
 def build_base_system_prompt(esquema: str) -> str:
     """System prompt grounded on the MCP resource ``estoque://esquema``."""
     return f"{SYSTEM_PROMPT_PTBR}\n\n{REGRAS_FERRAMENTAS}\n\n{esquema}"

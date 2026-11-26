@@ -94,6 +94,7 @@ def collect_environment(config: AgentConfig) -> dict[str, Any]:
             "temperatura": config.temperature,
             "seed": config.seed,
             "num_ctx": config.num_ctx,
+            "num_predict": config.num_predict,
             "reasoning": config.reasoning,
             "recursion_limit": config.recursion_limit,
             "max_revisoes": config.max_revisoes,

@@ -30,6 +30,7 @@ class ExecutionTracker(BaseCallbackHandler):
         self.tokens_saida = 0
         self._tokens_disponiveis = False
         self.ferramentas_usadas: list[str] = []
+        self.chamadas_ferramentas: list[dict[str, Any]] = []
         self.chamadas_por_agente: dict[str, int] = {}
 
     def on_chat_model_start(
@@ -65,6 +66,9 @@ class ExecutionTracker(BaseCallbackHandler):
     ) -> None:
         name = (serialized or {}).get("name") or kwargs.get("name") or "desconhecida"
         self.ferramentas_usadas.append(str(name))
+        agente = str((kwargs.get("metadata") or {}).get("agente") or "desconhecido")
+        args: Any = kwargs.get("inputs") or input_str
+        self.chamadas_ferramentas.append({"agente": agente, "ferramenta": name, "argumentos": args})
 
     @property
     def tokens(self) -> tuple[int | None, int | None]:

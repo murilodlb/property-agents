@@ -32,18 +32,26 @@ class AgentConfig:
     temperature: float = field(default_factory=lambda: float(os.getenv("AGENT_TEMPERATURE", "0.0")))
     seed: int = field(default_factory=lambda: int(os.getenv("AGENT_SEED", "42")))
     num_ctx: int = field(default_factory=lambda: int(os.getenv("AGENT_NUM_CTX", "16384")))
+    # Cap on generated tokens per LLM call (prevents degenerate repetition loops on CPU).
+    num_predict: int = field(default_factory=lambda: int(os.getenv("AGENT_NUM_PREDICT", "1024")))
     # "Thinking" mode of Qwen models; off by default to keep latency manageable on CPU.
     reasoning: bool = field(default_factory=lambda: _env_bool("AGENT_REASONING", False))
-    # Hard cap on LangGraph super-steps of each ReAct loop (protects against tool loops).
+    # Last-resort cap on LangGraph super-steps. Must stay well above the model-call cap
+    # below (each ReAct turn uses model + middleware + tools steps), so that the graceful
+    # ``max_chamadas_agente`` limit always fires first.
     recursion_limit: int = field(
-        default_factory=lambda: int(os.getenv("AGENT_RECURSION_LIMIT", "24"))
+        default_factory=lambda: int(os.getenv("AGENT_RECURSION_LIMIT", "80"))
+    )
+    # Per-run cap on LLM calls of each ReAct agent (stops tool loops of small models).
+    max_chamadas_agente: int = field(
+        default_factory=lambda: int(os.getenv("AGENT_MAX_CHAMADAS_AGENTE", "8"))
     )
     # Wall-clock timeout for one answer(question) call.
     timeout_seconds: float = field(
         default_factory=lambda: float(os.getenv("AGENT_TIMEOUT_SECONDS", "600"))
     )
     # Generator-verifier: maximum number of rewrite rounds after a rejection.
-    max_revisoes: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_REVISOES", "2")))
+    max_revisoes: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_REVISOES", "1")))
     # Supervisor: maximum number of delegations to specialists.
     max_delegacoes: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_DELEGACOES", "4")))
     server_script: Path = DEFAULT_SERVER_SCRIPT
@@ -56,5 +64,6 @@ class AgentConfig:
             temperature=self.temperature,
             seed=self.seed,
             num_ctx=self.num_ctx,
+            num_predict=self.num_predict,
             reasoning=self.reasoning,
         )
