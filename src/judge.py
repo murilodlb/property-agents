@@ -30,7 +30,7 @@ READ_ONLY_MCP_TOOLS: frozenset[str] = frozenset(
 )
 
 DEFAULT_MODELS: dict[str, str] = {
-    "gemini": "gemini-2.5-flash",
+    "gemini": "gemini-4-hydrogen",
     "openai_compatible": "llama-3.3-70b-versatile",
     "ollama": "gemma3:12b",
 }
@@ -83,6 +83,7 @@ class LLMStepResponse:
 
     content: str
     tool_calls: list[LLMToolRequest]
+    raw_parts: list[Any] | None = None
 
 
 class JudgeLLMBackend(Protocol):
@@ -94,6 +95,43 @@ class JudgeLLMBackend(Protocol):
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]],
     ) -> LLMStepResponse: ...
+
+
+def _load_dotenv(env_path: Path | None = None) -> None:
+    """Load key=value pairs from ``.env`` files into ``os.environ`` without overwriting."""
+    if env_path is not None:
+        candidates = [env_path]
+    else:
+        cwd_env = (Path.cwd() / ".env").resolve()
+        repo_env = (Path(__file__).resolve().parent.parent / ".env").resolve()
+        candidates = [cwd_env] if cwd_env == repo_env else [cwd_env, repo_env]
+
+    for path in candidates:
+        if not path.is_file():
+            continue
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for raw_line in lines:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[7:].strip()
+            if "=" not in line:
+                continue
+            key, raw_val = line.split("=", 1)
+            key = key.strip()
+            raw_val = raw_val.strip()
+            if not key:
+                continue
+            if len(raw_val) >= 2 and raw_val[0] == raw_val[-1] and raw_val[0] in ("'", '"'):
+                val = raw_val[1:-1]
+            else:
+                val = re.split(r"\s+#", raw_val, maxsplit=1)[0].strip()
+            if not os.environ.get(key):
+                os.environ[key] = val
 
 
 @dataclass
@@ -146,6 +184,7 @@ class JudgeConfig:
         server_env: dict[str, str] | None = None,
     ) -> JudgeConfig:
         """Build a ``JudgeConfig`` from explicit overrides and environment variables."""
+        _load_dotenv()
         raw_prov = (provider or os.getenv("JUDGE_PROVIDER") or "gemini").strip().lower()
         if raw_prov not in ("gemini", "openai_compatible", "ollama"):
             raise ValueError(
@@ -194,6 +233,58 @@ def _strip_additional_properties(schema: Any) -> Any:
     return schema
 
 
+def _build_gemini_contents(messages: list[dict[str, Any]]) -> list[Any]:
+    """Convert normalized chat history into ``google.genai`` ``Content`` turns."""
+    from google.genai import types
+
+    contents: list[types.Content] = []
+    for msg in messages:
+        role = msg["role"]
+        if role == "user":
+            contents.append(
+                types.Content(
+                    role="user",
+                    parts=[types.Part.from_text(text=str(msg["content"]))],
+                )
+            )
+        elif role == "assistant":
+            raw_parts = msg.get("raw_parts")
+            if raw_parts:
+                contents.append(types.Content(role="model", parts=list(raw_parts)))
+            else:
+                parts: list[types.Part] = []
+                if msg.get("content"):
+                    parts.append(types.Part.from_text(text=str(msg["content"])))
+                for tc in msg.get("tool_calls", []):
+                    parts.append(
+                        types.Part.from_function_call(
+                            name=tc["name"], args=tc.get("arguments", {})
+                        )
+                    )
+                contents.append(types.Content(role="model", parts=parts))
+        elif role == "tool":
+            safe_content = json.loads(
+                json.dumps(msg["content"], ensure_ascii=False, default=str)
+            )
+            fn_resp = types.Part.from_function_response(
+                name=msg["name"],
+                response={"result": safe_content},
+            )
+            if (
+                contents
+                and contents[-1].role == "user"
+                and contents[-1].parts
+                and all(
+                    getattr(p, "function_response", None) is not None
+                    for p in contents[-1].parts
+                )
+            ):
+                contents[-1].parts.append(fn_resp)
+            else:
+                contents.append(types.Content(role="user", parts=[fn_resp]))
+    return contents
+
+
 class GeminiJudgeBackend:
     """Google GenAI (Gemini) tool-calling backend using ``google-genai``."""
 
@@ -201,6 +292,9 @@ class GeminiJudgeBackend:
         from google import genai
 
         api_key = config.api_key or os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            _load_dotenv()
+            api_key = config.api_key or os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError(
                 "Chave GEMINI_API_KEY não configurada para o provedor 'gemini'."
@@ -228,39 +322,7 @@ class GeminiJudgeBackend:
         ]
         genai_tools = [types.Tool(function_declarations=declarations)] if declarations else None
 
-        contents: list[types.Content] = []
-        for msg in messages:
-            role = msg["role"]
-            if role == "user":
-                contents.append(
-                    types.Content(
-                        role="user",
-                        parts=[types.Part.from_text(text=str(msg["content"]))],
-                    )
-                )
-            elif role == "assistant":
-                parts: list[types.Part] = []
-                if msg.get("content"):
-                    parts.append(types.Part.from_text(text=str(msg["content"])))
-                for tc in msg.get("tool_calls", []):
-                    parts.append(
-                        types.Part.from_function_call(
-                            name=tc["name"], args=tc.get("arguments", {})
-                        )
-                    )
-                contents.append(types.Content(role="model", parts=parts))
-            elif role == "tool":
-                contents.append(
-                    types.Content(
-                        role="user",
-                        parts=[
-                            types.Part.from_function_response(
-                                name=msg["name"],
-                                response={"result": msg["content"]},
-                            )
-                        ],
-                    )
-                )
+        contents = _build_gemini_contents(messages)
 
         gen_config = types.GenerateContentConfig(
             system_instruction=system_prompt,
@@ -273,6 +335,17 @@ class GeminiJudgeBackend:
             config=gen_config,
         )
 
+        raw_parts: list[Any] = []
+        candidates = getattr(response, "candidates", None) or []
+        if candidates and getattr(candidates[0], "content", None) is not None:
+            raw_parts = list(getattr(candidates[0].content, "parts", None) or [])
+
+        text_chunks: list[str] = []
+        for part in raw_parts:
+            part_text = getattr(part, "text", None)
+            if part_text and not getattr(part, "thought", False):
+                text_chunks.append(str(part_text))
+
         tool_calls: list[LLMToolRequest] = []
         if response.function_calls:
             for idx, fc in enumerate(response.function_calls):
@@ -284,7 +357,15 @@ class GeminiJudgeBackend:
                             call_id=f"gemini_call_{idx}",
                         )
                     )
-        return LLMStepResponse(content=response.text or "", tool_calls=tool_calls)
+
+        content_text = "".join(text_chunks)
+        if not content_text and not tool_calls:
+            content_text = response.text or ""
+        return LLMStepResponse(
+            content=content_text,
+            tool_calls=tool_calls,
+            raw_parts=raw_parts or None,
+        )
 
 
 class OpenAICompatibleJudgeBackend:
@@ -294,6 +375,11 @@ class OpenAICompatibleJudgeBackend:
         from openai import AsyncOpenAI
 
         api_key = config.api_key or os.getenv("JUDGE_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            _load_dotenv()
+            api_key = (
+                config.api_key or os.getenv("JUDGE_API_KEY") or os.getenv("OPENAI_API_KEY")
+            )
         if not api_key:
             raise ValueError(
                 "Chave JUDGE_API_KEY (ou OPENAI_API_KEY) não configurada para "
@@ -752,20 +838,21 @@ class MCPJudge:
             if not step_resp.tool_calls:
                 return _parse_verdict_json(step_resp.content, consultas, self.config)
 
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": step_resp.content,
-                    "tool_calls": [
-                        {
-                            "name": tc.name,
-                            "arguments": tc.arguments,
-                            "call_id": tc.call_id,
-                        }
-                        for tc in step_resp.tool_calls
-                    ],
-                }
-            )
+            assistant_msg: dict[str, Any] = {
+                "role": "assistant",
+                "content": step_resp.content,
+                "tool_calls": [
+                    {
+                        "name": tc.name,
+                        "arguments": tc.arguments,
+                        "call_id": tc.call_id,
+                    }
+                    for tc in step_resp.tool_calls
+                ],
+            }
+            if step_resp.raw_parts is not None:
+                assistant_msg["raw_parts"] = step_resp.raw_parts
+            messages.append(assistant_msg)
             for tc in step_resp.tool_calls:
                 tool_result, call_log = await self.execute_readonly_tool(tc.name, tc.arguments)
                 consultas.append(call_log)

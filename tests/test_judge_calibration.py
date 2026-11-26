@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import re
 import sys
 import warnings
@@ -25,6 +26,8 @@ from src.judge import (  # noqa: E402
     LLMStepResponse,
     LLMToolRequest,
     MCPJudge,
+    _build_gemini_contents,
+    _load_dotenv,
 )
 from src.questions import PERGUNTAS, _simulate_sac_values, df  # noqa: E402
 from src.schema import ExecutionRecord  # noqa: E402
@@ -409,7 +412,7 @@ def test_mcp_judge_with_real_server_and_mock_llm() -> None:
     cases = build_calibration_cases()
     by_answer = {c["execution"].resposta: c for c in cases}
     backend = _CalibrationMockBackend(by_answer)
-    cfg = JudgeConfig(provider="gemini", model="gemini-2.5-flash", min_delay_seconds=0.0)
+    cfg = JudgeConfig(provider="gemini", model="gemini-4-hydrogen", min_delay_seconds=0.0)
 
     async def _run() -> None:
         async with MCPJudge(config=cfg, backend=backend) as judge:
@@ -428,6 +431,76 @@ def test_mcp_judge_with_real_server_and_mock_llm() -> None:
                 assert verdict.consultas_realizadas[0].erro is False
 
     asyncio.run(_run())
+
+
+def test_load_dotenv_and_judge_config_from_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "\n".join(
+            [
+                "# Comentário",
+                'GEMINI_API_KEY="quoted-secret-key"',
+                "JUDGE_MODEL=gemini-2.5-pro # inline comment",
+                "export JUDGE_MIN_DELAY_SECONDS='1.5'",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    for var in ("GEMINI_API_KEY", "JUDGE_MODEL", "JUDGE_MIN_DELAY_SECONDS"):
+        monkeypatch.delenv(var, raising=False)
+
+    _load_dotenv(env_file)
+    assert os.environ["GEMINI_API_KEY"] == "quoted-secret-key"
+    assert os.environ["JUDGE_MODEL"] == "gemini-2.5-pro"
+    assert os.environ["JUDGE_MIN_DELAY_SECONDS"] == "1.5"
+
+    # Existing non-empty shell env var must not be overwritten by .env
+    monkeypatch.setenv("GEMINI_API_KEY", "explicit-shell-key")
+    _load_dotenv(env_file)
+    assert os.environ["GEMINI_API_KEY"] == "explicit-shell-key"
+
+
+def test_gemini_contents_groups_parallel_tool_responses() -> None:
+    messages: list[dict[str, Any]] = [
+        {"role": "user", "content": "Audite a resposta."},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "name": "estatisticas_mercado",
+                    "arguments": {"cidade": "Natal", "tipo_imovel": "casa"},
+                    "call_id": "gemini_call_0",
+                },
+                {
+                    "name": "estatisticas_mercado",
+                    "arguments": {"cidade": "Parnamirim", "tipo_imovel": "casa"},
+                    "call_id": "gemini_call_1",
+                },
+            ],
+        },
+        {
+            "role": "tool",
+            "name": "estatisticas_mercado",
+            "call_id": "gemini_call_0",
+            "content": {"total_encontrado": 100},
+        },
+        {
+            "role": "tool",
+            "name": "estatisticas_mercado",
+            "call_id": "gemini_call_1",
+            "content": {"total_encontrado": 50},
+        },
+    ]
+
+    contents = _build_gemini_contents(messages)
+    assert len(contents) == 3
+    assert [c.role for c in contents] == ["user", "model", "user"]
+    assert len(contents[2].parts) == 2
+    assert all(p.function_response is not None for p in contents[2].parts)
 
 
 @pytest.mark.live_judge

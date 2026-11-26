@@ -257,8 +257,8 @@ GEMINI_API_KEY="sua_chave_aqui" uv run python tests/test_judge_calibration.py --
 
 ### 6. Execução completa no Google Colab (GPU)
 
-Para rodar todas as arquiteturas da branch `feat/agentes-langchain`, o Juiz MCP e o relatório consolidado diretamente na GPU do Google Colab, abra o notebook via GitHub:
+Para rodar todas as arquiteturas presentes na `main`, o Juiz MCP e o relatório consolidado diretamente na GPU do Google Colab, abra o notebook via GitHub:
 
 `https://colab.research.google.com/github/murilodlb/property-agents/blob/main/notebooks/colab_benchmark_gpu.ipynb`
 
-> **Dica:** defina `GEMINI_API_KEY` (ou configure nos **Secrets** do Colab) na primeira célula de código e certifique-se de que a branch `main` no GitHub contém a versão mais recente de `src/report.py`.
+> **Dica:** defina `GEMINI_API_KEY` (ou configure nos **Secrets** do Colab) na primeira célula de código antes de executar.
