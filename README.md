@@ -242,8 +242,12 @@ uv run python -m src.report --input results/benchmark_60_execucoes.csv --out-dir
 ```
 
 Gera:
-- `results/benchmark_summary.md` (Tabela 1 com `Taxa Acerto (%)`, `Taxa Alucinação (%)` e quebra `Chamadas LLM / Tools / Total`; Tabela 2 Categoria × Sistema; Tabela 3 distribuição de vereditos + Kappa de Cohen; Tabela 4 estatísticas computacionais de CPU, RAM e GPU)
+- `results/benchmark_summary.md` (Tabela 1 com `Taxa Acerto (%)`, `Taxa Alucinação (%)`, quebra `Chamadas LLM / Tools / Total`, latência **média / mediana / P95** e tokens de **entrada / saída**; Tabela 2 Categoria × Sistema; Tabela 3 distribuição de vereditos + Kappa de Cohen; Tabela 4 estatísticas computacionais de CPU, RAM e GPU; Tabela 5 acerto **por pergunta × sistema**; Tabela 6 **verificação manual** — concordância e Kappa Manual × Juiz e taxa de acerto pós-auditoria)
 - `results/divergencias_auditoria_manual.csv` (casos em que automático e juiz divergem ou veredito != `correta`, com colunas `revisao_manual` e `nota_manual`)
+- `results/erros_por_pergunta.csv` (uma linha por execução incorreta, com veredito, ferramentas usadas, falhas automáticas e justificativa do juiz — base da análise de erros)
+- `results/acerto_vs_custo.png` e `results/acerto_vs_custo.csv` (gráfico de acerto × custo: taxa de acerto contra tokens médios e contra latência média, um ponto por arquitetura)
+
+**Verificação manual dos vereditos.** Preencha a coluna `revisao_manual` de `results/divergencias_auditoria_manual.csv` com `correta` ou `incorreta` (também aceitos `sim`/`nao`, `parcial`, `alucinacao`, `1`/`0`) e, se quiser, uma justificativa em `nota_manual`. Depois rode `src.report` de novo: as revisões já preenchidas são **preservadas** no novo CSV e entram na Tabela 6. Um rótulo inválido interrompe o relatório com erro, para não contaminar a concordância.
 
 ### 5. Calibração do Juiz e Suíte de Testes
 
